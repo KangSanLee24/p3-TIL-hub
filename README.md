@@ -24,31 +24,33 @@ yarn add express dotenv bcrypt jsonwebtoken prisma nodemon @prisma/client cookie
 
 ```markdown
 PP3RESUME-HUB
+├── assets
+│   └── ERD1.JPG
 ├── prisma
 │   ├── schema.prisma
 │   └── migrations
 ├── src
 │   ├── constants
-|   |   ├── auth.constant.js
+|   |   ├── 
 |   |   ├── env.constant.js
-|   |   ├── resume.constant.js
-|   |   └── user.constant.js
+|   |   ├── 
+|   |   └── 
 │   ├── middlewares
-|   |   ├── authentication.middleware.js
-|   |   ├── authorization.middleware.js
-|   |   ├── error-handling.middleware.js
-|   |   ├── log.middleware.js
+|   |   ├── 
+|   |   ├── 
+|   |   ├── 
+|   |   ├── 
 |   |   └── validators
-|   |       ├── listResumes.validator.js
-|   |       ├── postResume.validator.js
-|   |       ├── signup.validator.js
-|   |       ├── singin.validator.js
-|   |       └── updateResume.validator.js
+|   |       ├── 
+|   |       ├── 
+|   |       ├── 
+|   |       ├── 
+|   |       └── 
 │   ├── routers
-│   │   ├── resumes.router.js
-│   │   └── users.router.js
-│   ├── utils
-|   |   └── prisma.index.js
+│   │   ├── post.router.js
+│   │   └── user.router.js
+│   ├── utils/prisma
+|   |   └── index.js
 │   └── app.js
 ├── .env
 ├── .gitignore
@@ -57,6 +59,12 @@ PP3RESUME-HUB
 ├── yarn.lock
 └── README.md
 ```
+
+
+## 📑 ERD (Entity Relationship Diagram)
+
+![ERD](./assets/ERD.JPG)
+
 
 ## 🛠 개발 환경
 
