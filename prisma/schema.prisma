@@ -63,7 +63,7 @@ model TIL {
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
   hashtag       String?    @map("hashtag")
-  visibility    Visibility  @default(Public)
+  visibility    Visibility  @default(PUBLIC)
 
   User      User      @relation(fields: [UserId], references: [userId])
   LikeLog   LikeLog[]
@@ -73,10 +73,10 @@ model TIL {
 }
 
 enum Visibility {
-  Public
-  Followers
-  Managers
-  Private
+  PUBLIC
+  FOLLOWER
+  MANAGER
+  PRIVATE
 }
 
 model LikeLog {
