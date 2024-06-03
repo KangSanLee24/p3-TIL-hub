@@ -1,18 +1,23 @@
 import express from 'express';
-import { prisma } from '../utils/prisma.util.js';
+import { prisma } from '../utils/prisma/index.js';
+import { Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
-//import { createUser, loginUser } from './joi.js';
+import { createUser, loginUser } from './joi.js';
 import jwt from 'jsonwebtoken';
+import { ACCESS_TOKEN_SECRET_KEY } from '../constants/env.constant.js';
+import { REFRESH_TOKEN_SECRET_KEY } from '../constants/env.constant.js';
 
 const router = express.Router();
 
+//회원가입 /auth/sign-up
 router.post('/sign-up', async (req, res, next) => {
     try {
-      const { name, email, password, passwordConfirm, phoneNumber, role} = req.body;
+      const { name, email, password, passwordConfirm, phoneNumber} = req.body;
   
+      //joi 유효성 검사
       await createUser.validateAsync(req.body);
   
-      const isExistUser = await prisma.user.findFirst({
+      const isExistUser = await prisma.User.findFirst({
         where: {
           email,
         },
@@ -32,35 +37,42 @@ router.post('/sign-up', async (req, res, next) => {
         });
       }
   
+      //비밀번호 해싱
       const hashPassword = await bcrypt.hash(password, 10);
   
-      const [User, UserInfo] = await prisma.$transaction(
+      //트랙잭션
+      const [createdUser, createdUserInfo] = await prisma.$transaction(
         async (tx) => {
             const user = await tx.User.create({
-                date: {
+                data: {
                     name,
                     email,
                     password: hashPassword,
-                    phoneNumber,
-                    role,
+                    phoneNumber
                 },
             });
 
             const userInfo = await tx.UserInfo.create({
                 data: {
+                    userId : user.userId,
+                },
+            });
 
-                }
-            })
+            return [user, userInfo];
+        }
+        ,
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
         });
   
       const responseUser = {
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        userId: createdUser.userId,
+        name: createdUser.name,
+        email: createdUser.email,
+        phoneNumber: createdUser.phoneNumber,
+        role: createdUser.role,
+        createdAt: createdUser.createdAt,
+        updatedAt: createdUser.updatedAt,
       };
   
       return res.status(201).json({
