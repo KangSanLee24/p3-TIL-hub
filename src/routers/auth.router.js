@@ -84,5 +84,92 @@ router.post('/sign-up', async (req, res, next) => {
       next(error);
     }
   });
+
+  //로그인 /auth/sign-in
+  router.post('/sign-in', async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+  
+      //joi 유효성 검사
+      await loginUser.validateAsync(req.body);
+  
+      const user = await prisma.User.findFirst({
+        where: { email },
+      });
+  
+      if (!user) {
+        return res.status(401).json({
+          status: 401,
+          message: '존재하지 않는 사용자 입니다.',
+        });
+      }
+  
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return res.status(401).json({
+          status: 401,
+          message: '비밀번호가 일치하지 않습니다.',
+        });
+      }
+  
+      //토큰 생성
+      const accesstoken = jwt.sign(
+        { userId: user.userId },
+        ACCESS_TOKEN_SECRET_KEY,
+        { expiresIn: '12h' }
+      );
+  
+      const refreshtoken = jwt.sign(
+        { userId: user.userId },
+        REFRESH_TOKEN_SECRET_KEY,
+        { expiresIn: '7d' }
+      );
+  
+      res.setHeader('accesstoken', `Bearer ${accesstoken}`);
+      res.setHeader('refreshtoken', `Bearer ${refreshtoken}`);
+  
+      const hashRefreshToken = await bcrypt.hash(refreshtoken, 10);
+  
+      const existingToken = await prisma.RefreshToken.findFirst({
+        where: {
+          UserId: user.userId,
+        },
+      });
+  
+      if (existingToken) {
+        await prisma.RefreshToken.update({
+          where: {
+            UserId: user.userId,
+          },
+          data: {
+            refreshToken: hashRefreshToken,
+          },
+        });
+  
+        return res.status(200).json({
+          status: 200,
+          message: '로그인에 성공했습니다.',
+          accesstoken,
+          refreshtoken,
+        });
+      }
+  
+      await prisma.RefreshToken.create({
+        data: {
+          UserId: user.userId,
+          refreshToken: hashRefreshToken,
+        },
+      });
+  
+      return res.status(200).json({
+        status: 200,
+        message: '로그인에 성공했습니다.',
+        accesstoken,
+        refreshtoken,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
   
   export default router;
