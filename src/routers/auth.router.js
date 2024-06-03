@@ -175,57 +175,65 @@ router.post('/sign-up', async (req, res, next) => {
 
   //로그아웃 /auth/sign-out
   router.post('/sign-out', refreshMiddleware, async (req, res, next) => {
-    const { userId } = req.user;
+    try{
+        const { userId } = req.user;
   
-    await prisma.RefreshToken.delete({
-      where: { UserId: +userId },
-    });
-  
-    return res.status(200).json({
-      status: 200,
-      message: '로그아웃에 성공했습니다.',
-      data: {
-        id: userId,
-      },
-    });
+        await prisma.RefreshToken.delete({
+          where: { UserId: +userId },
+        });
+      
+        return res.status(200).json({
+          status: 200,
+          message: '로그아웃에 성공했습니다.',
+          data: {
+            id: userId,
+          },
+        });
+    } catch(error){
+        next(error);
+    }
   });
 
   //token 재발급 /auth/token
   router.post('/token', refreshMiddleware, async (req, res, next) => {
-    const { userId } = req.user;
+    try {
+        const { userId } = req.user;
   
-    const accesstoken = jwt.sign(
-      { userId: userId },
-      ACCESS_TOKEN_SECRET_KEY,
-      { expiresIn: '12h' }
-    );
-  
-    const refreshtoken = jwt.sign(
-      { userId: userId },
-      REFRESH_TOKEN_SECRET_KEY,
-      { expiresIn: '7d' }
-    );
-  
-    res.setHeader('accesstoken', `Bearer ${accesstoken}`);
-    res.setHeader('refreshtoken', `Bearer ${refreshtoken}`);
-  
-    const hashRefreshToken = await bcrypt.hash(refreshtoken, 10);
-  
-    await prisma.RefreshToken.update({
-      where: {
-        UserId: +userId,
-      },
-      data: {
-        refreshToken: hashRefreshToken,
-      },
-    });
-  
-    return res.status(200).json({
-      status: 200,
-      message: '토큰 재발급에 성공했습니다.',
-      accesstoken,
-      refreshtoken,
-    });
+        const accesstoken = jwt.sign(
+          { userId: userId },
+          ACCESS_TOKEN_SECRET_KEY,
+          { expiresIn: '12h' }
+        );
+      
+        const refreshtoken = jwt.sign(
+          { userId: userId },
+          REFRESH_TOKEN_SECRET_KEY,
+          { expiresIn: '7d' }
+        );
+      
+        res.setHeader('accesstoken', `Bearer ${accesstoken}`);
+        res.setHeader('refreshtoken', `Bearer ${refreshtoken}`);
+      
+        const hashRefreshToken = await bcrypt.hash(refreshtoken, 10);
+      
+        await prisma.RefreshToken.update({
+          where: {
+            UserId: +userId,
+          },
+          data: {
+            refreshToken: hashRefreshToken,
+          },
+        });
+      
+        return res.status(200).json({
+          status: 200,
+          message: '토큰 재발급에 성공했습니다.',
+          accesstoken,
+          refreshtoken,
+        });
+    } catch(error){
+        next(error);
+    }
   });
   
   export default router;
