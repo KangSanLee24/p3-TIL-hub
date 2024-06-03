@@ -46,6 +46,8 @@ model UserInfo{
     level       Int?        @map("level")
     trackNumber String?     @map("track_number")
     userId  Int     @unique @map("user_id")
+    createdAt     DateTime   @default(now()) @map("created_at")
+    updatedAt     DateTime   @updatedAt @map("updated_at")
 
     User    User    @relation(fields:[userId],references:[userId])
 
@@ -61,12 +63,20 @@ model TIL {
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
   hashtag       String?    @map("hashtag")
+  visibility    Visibility  @default(Public)
 
   User      User      @relation(fields: [UserId], references: [userId])
   LikeLog   LikeLog[]
   Comment   Comment[]
 
   @@map("til")
+}
+
+enum Visibility {
+  Public
+  Followers
+  Managers
+  Private
 }
 
 model LikeLog {
