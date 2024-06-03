@@ -6,6 +6,7 @@ import { createUser, loginUser } from './joi.js';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET_KEY } from '../constants/env.constant.js';
 import { REFRESH_TOKEN_SECRET_KEY } from '../constants/env.constant.js';
+import refreshMiddleware from '../middlewares/require-refresh-token.middleware.js';
 
 const router = express.Router();
 
@@ -170,6 +171,23 @@ router.post('/sign-up', async (req, res, next) => {
     } catch (error) {
       next(error);
     }
+  });
+
+  //로그아웃 /auth/sign-out
+  router.post('/sign-out', refreshMiddleware, async (req, res, next) => {
+    const { userId } = req.user;
+  
+    await prisma.RefreshToken.delete({
+      where: { UserId: +userId },
+    });
+  
+    return res.status(200).json({
+      status: 200,
+      message: '로그아웃에 성공했습니다.',
+      data: {
+        id: userId,
+      },
+    });
   });
   
   export default router;
