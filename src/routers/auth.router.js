@@ -189,5 +189,43 @@ router.post('/sign-up', async (req, res, next) => {
       },
     });
   });
+
+  //token 재발급 /auth/token
+  router.post('/token', refreshMiddleware, async (req, res, next) => {
+    const { userId } = req.user;
+  
+    const accesstoken = jwt.sign(
+      { userId: userId },
+      ACCESS_TOKEN_SECRET_KEY,
+      { expiresIn: '12h' }
+    );
+  
+    const refreshtoken = jwt.sign(
+      { userId: userId },
+      REFRESH_TOKEN_SECRET_KEY,
+      { expiresIn: '7d' }
+    );
+  
+    res.setHeader('accesstoken', `Bearer ${accesstoken}`);
+    res.setHeader('refreshtoken', `Bearer ${refreshtoken}`);
+  
+    const hashRefreshToken = await bcrypt.hash(refreshtoken, 10);
+  
+    await prisma.RefreshToken.update({
+      where: {
+        UserId: +userId,
+      },
+      data: {
+        refreshToken: hashRefreshToken,
+      },
+    });
+  
+    return res.status(200).json({
+      status: 200,
+      message: '토큰 재발급에 성공했습니다.',
+      accesstoken,
+      refreshtoken,
+    });
+  });
   
   export default router;
