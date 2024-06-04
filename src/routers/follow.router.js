@@ -38,12 +38,27 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
         FollowerId: userId,
         FolloweeId: +followeeId,
       },
+      include: {
+        Follower: {
+          select: {
+            name: true,
+          },
+        },
+        Followee: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     return res.status(201).json({
       status: 201,
       message: "구독 신청에 성공했습니다.",
-      data: follower,
+      data: {
+        followerName: follower.Follower.name,
+        followeeName: follower.Followee.name,
+      },
     });
   } catch (error) {
     next(error);
