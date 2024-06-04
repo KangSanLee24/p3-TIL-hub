@@ -5,9 +5,7 @@ export const createUser = Joi.object({
   email: Joi.string().required().email(),
   password: Joi.string().required().min(6),
   passwordConfirm: Joi.string().required().min(6),
-  phoneNumber: Joi.string()
-    .required()
-    .pattern(/^(010-\d{3,4}-\d{4})$/),
+  phoneNumber: Joi.string().pattern(/^(010-\d{3,4}-\d{4})$/),
 });
 
 export const loginUser = Joi.object({
