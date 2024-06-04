@@ -24,6 +24,7 @@ model User {
   createdAt  DateTime   @default(now()) @map("created_at")
   updatedAt  DateTime   @updatedAt @map("updated_at")
   isDeleted   Boolean  @default(true) @map("is_deleted")
+  isEmailValid Boolean @default(false) @map("is_email_valid")
 
   UserInfo  UserInfo?
   TIL       TIL[]

@@ -7,6 +7,8 @@ import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import { REFRESH_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import refreshMiddleware from "../middlewares/require-refresh-token.middleware.js";
+import { transporter } from '../constants/mail.constant.js';
+import { SEVER_PORT } from "../constants/env.constant.js";
 
 const router = express.Router();
 
@@ -49,7 +51,7 @@ router.post("/sign-up", async (req, res, next) => {
             name,
             email,
             password: hashPassword,
-            phoneNumber,
+            phoneNumber
           },
         });
 
@@ -66,22 +68,49 @@ router.post("/sign-up", async (req, res, next) => {
       }
     );
 
-    const responseUser = {
-      userId: createdUser.userId,
-      name: createdUser.name,
-      email: createdUser.email,
-      phoneNumber: createdUser.phoneNumber,
-      role: createdUser.role,
-      createdAt: createdUser.createdAt,
-      updatedAt: createdUser.updatedAt,
-    };
+    const url = `http://localhost:${SEVER_PORT}/auth/verify-email?email=${email}`;
+
+    await transporter.sendMail({
+      from: 'tilhub@naver.com',
+      to: email,
+      subject: '[tilhub] 회원가입 인증 메일입니다.',
+      html: `<form action="${url}" method="POST">
+      <h2 style="margin: 20px 0">[tilhub] 이메일 인증 버튼을 클릭해 주세요.</h2>
+      <button style=" background-color: #c0c0c0; color:#000000; width: 80px; height:40px; border-radius: 20px; border: none;">이메일 인증</button>
+    </form>`,
+    });
 
     return res.status(201).json({
       status: 201,
-      message: "회원가입에 성공했습니다.",
-      data: responseUser,
+      message: "인증 이메일을 전송했습니다. 인증 후 회원가입이 완료됩니다."
     });
+    
   } catch (error) {
+    next(error);
+  }
+});
+
+//이메일 인증
+router.post('/verify-email', async (req, res, next) => {
+  try {
+    const { email } = req.query;
+
+    await prisma.User.update({
+      where : {email : email},
+      data: {
+        isEmailValid: true,
+      }
+    });
+
+    return res.status(201).json({
+      status: 201,
+      message: "회원가입에 성공했습니다."
+    });
+    
+  } catch(error){
+    await prisma.User.delete({
+      where: {email: email}
+    });
     next(error);
   }
 });
