@@ -5,6 +5,7 @@ import UserRouter from "./routers/user.router.js";
 import PostRouter from "./routers/post.router.js";
 import AuthRouter from "./routers/auth.router.js";
 import FollowRouter from './routers/follow.router.js';
+import errorHandingMiddleware from './middlewares/error-handler.middleware.js';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use("/auth", [AuthRouter]);
 app.use("/user", [UserRouter]);
 app.use("/post", [PostRouter]);
 app.use("/follow", [FollowRouter]);
+app.use(errorHandingMiddleware);
 
 app.listen(SEVER_PORT, () => {
   console.log(SEVER_PORT, "포트로 서버가 열렸어요!");
