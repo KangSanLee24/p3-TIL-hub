@@ -134,6 +134,13 @@ router.post("/sign-in", async (req, res, next) => {
       });
     }
 
+    if (user.isEmailValid === false){
+      return res.status(400).json({
+        status: 400,
+        message: "이메일 인증을 완료해 주세요.",
+      });
+    };
+
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return res.status(401).json({
