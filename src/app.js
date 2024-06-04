@@ -9,6 +9,7 @@ import PostRouter from './routers/post.router.js';
 import CommentRouter from './routers/comment.router.js';
 import { validatePost } from './middlewares/validators/validation.middleware.js';
 import AuthRouter from './routers/auth.router.js';
+import likesRouter from './routers/likes.js'
 
 const app = express();
 const prisma = new PrismaClient();
@@ -124,6 +125,8 @@ app.get('/post/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ status: 500, message: err.message });
     }
 });
+
+app.use('/til/:til_id', likesRouter);
 
 app.listen(SERVER_PORT, () => {
     console.log(`${SERVER_PORT} 포트로 서버가 열렸어요!`);
