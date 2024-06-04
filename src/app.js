@@ -7,12 +7,12 @@ import CommentRouter from "./routers/comment.router.js";
 
 const app = express();
 
-app.use(express.json()); //body에 있는거 json으로 바꾸는 기능
-app.use(express.urlencoded({ extended: true })); //form으로 들어오는 데이터를 body로 넘겨주는 기능
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/user", [UserRouter]);
 app.use("/til", [PostRouter, CommentRouter]);
 
 app.listen(SEVER_PORT, () => {
-  console.log(SEVER_PORT, "포트로 서버가 열렸어요!");
+  console.log(`${SEVER_PORT} 포트로 서버가 열렸어요!`);
 });
