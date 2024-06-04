@@ -2,21 +2,6 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma/index.js";
 import { ACCESS_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 
-export async function getUserFromToken(token) {
-  const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
-  const userId = decodedToken.userId;
-
-  const user = await prisma.User.findFirst({
-    where: { userId: +userId },
-  });
-
-  if (!user) {
-    throw new Error("인증 정보와 일치하는 사용자가 없습니다.");
-  }
-
-  return user;
-}
-
 export default async function (req, res, next) {
   try {
     const accesstoken = req.headers.authorization;

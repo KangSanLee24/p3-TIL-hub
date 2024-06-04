@@ -30,7 +30,6 @@ export const MESSAGES = {
         DISCARDED_TOKEN: "폐기 된 인증 정보입니다.",
       },
     },
-<<<<<<< HEAD
     SIGN_UP: {
       SUCCEED: "회원가입에 성공했습니다.",
     },
@@ -43,8 +42,6 @@ export const MESSAGES = {
     TOKEN: {
       SUCCEED: "토큰 재발급에 성공했습니다.",
     },
-=======
->>>>>>> 6eb0f041ec5c31893da5c53b93a7113eba9f624d
   },
   USERS: {
     READ_ME: {
