@@ -2,6 +2,7 @@ import express from "express";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 import { prisma } from "../utils/prisma/index.js";
 import { postTIL } from "../middlewares/joi.js";
+import { requireRoles } from "../middlewares/require-roles.middleware.js";
 
 const router = express.Router();
 
@@ -131,50 +132,57 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
 });
 
 // 게시글 상세조회 API /til/:id
-router.get("/:id", requireAccessToken, async (req, res, next) => {
-  const tilId = parseInt(req.params.id);
-  try {
-    const post = await prisma.TIL.findUnique({
-      where: { tilId: +tilId },
-      include: {
-        User: {
-          select: {
-            userId: true,
-            name: true,
+router.get(
+  "/:til_id",
+  requireAccessToken,
+  requireRoles,
+  async (req, res, next) => {
+    const params = req.params;
+    const tilId = parseInt(params.til_id);
+    console.log(tilId);
+    try {
+      const post = await prisma.TIL.findUnique({
+        where: { tilId: +tilId },
+        include: {
+          User: {
+            select: {
+              userId: true,
+              name: true,
+            },
           },
+          LikeLog: true,
+          Comment: true,
         },
-        LikeLog: true,
-        Comment: true,
-      },
-    });
-
-    if (!post) {
-      return res.status(400).json({
-        status: 400,
-        message: "게시글이 존재하지 않습니다.",
       });
-    }
 
-    res.status(200).json({
-      status: 200,
-      message: "게시글 상세 조회에 성공했습니다.",
-      data: {
-        id: post.id,
-        userId: post.User.id,
-        userName: post.User.name,
-        title: post.title,
-        content: post.content,
-        category: post.category,
-        visibility: post.visibility,
-        likeNumber: post.LikeLog.length,
-        comments: post.Comment,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ status: 500, message: err.message });
+      if (!post) {
+        return res.status(400).json({
+          status: 400,
+          message: "게시글이 존재하지 않습니다.",
+        });
+      }
+
+      res.status(200).json({
+        status: 200,
+        message: "게시글 상세 조회에 성공했습니다.",
+        data: {
+          id: post.id,
+          userId: post.User.id,
+          userName: post.User.name,
+          title: post.title,
+          content: post.content,
+          category: post.category,
+          visibility: post.visibility,
+          likeNumber: post.LikeLog.length,
+          comments: post.Comment,
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({ status: 500, message: err.message });
+    }
   }
-});
+);
 
 export default router;

@@ -13,27 +13,28 @@ export const requireRoles = async (req, res, next) => {
 
     const til = await prisma.TIL.findFirst({
       where: { tilId: +tilId },
-      select: { userId: true, visibility: true },
+      select: { UserId: true, visibility: true },
     });
 
     const follower = await prisma.Follow.findMany({
-      where: { FolloweeId: til.userId },
+      where: { FollowerId: til.userId },
       select: { FollowerId: true },
     });
 
     //private
-    if (til.visibility === "private") {
+    if (til.visibility === "PRIVATE") {
       if (til.userId != +userId) {
         return res.status(403).json({
           status: 403,
           message: "접근 권한이 없습니다.",
         });
       }
+      req.params = params;
       return next();
     }
 
     //manager
-    if (til.visibility === "manager") {
+    if (til.visibility === "MANAGER") {
       if (til.userId != +userId) {
         if (user.role != "MANAGER") {
           return res.status(403).json({
@@ -42,23 +43,27 @@ export const requireRoles = async (req, res, next) => {
           });
         }
       }
+      req.params = params;
       return next();
     }
 
     //follower
     const followerIds = follower.map((f) => f.FollowerId);
 
-    if (til.visibility === "follower") {
+    if (til.visibility === "FOLLOWER") {
       if (!followerIds.includes(+userId)) {
-        return res.status(403).json({
-          status: 403,
-          message: "접근 권한이 없습니다.",
-        });
+        if (user.role != "MANAGER") {
+          return res.status(403).json({
+            status: 403,
+            message: "접근 권한이 없습니다.",
+          });
+        }
       }
+      req.params = params;
       return next();
     }
-
-    return next();
+    req.params = params;
+    next();
   } catch (error) {
     next(error);
   }
