@@ -1,11 +1,10 @@
 import express from "express";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 import { prisma } from "../utils/prisma/index.js";
-import { updateUser } from "./joi.js";
+import { updateUser } from "../middlewares/joi.js";
 
 const router = express.Router();
 
-// 내 정보 조회
 router.get("/", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
@@ -46,7 +45,7 @@ router.get("/", requireAccessToken, async (req, res, next) => {
   }
 });
 
-// 내 정보 수정
+// 내 정보 수정/user
 router.put("/", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
@@ -87,7 +86,7 @@ router.put("/", requireAccessToken, async (req, res, next) => {
   }
 });
 
-// 다른 유저 조회
+// 다른 유저 조회/user/:id
 router.get("/:id", requireAccessToken, async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id, 10);
