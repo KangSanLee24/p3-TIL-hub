@@ -24,6 +24,7 @@ model User {
   createdAt  DateTime   @default(now()) @map("created_at")
   updatedAt  DateTime   @updatedAt @map("updated_at")
   isDeleted   Boolean  @default(true) @map("is_deleted")
+  isEmailValid Boolean @default(false) @map("is_email_valid")
 
   UserInfo  UserInfo?
   TIL       TIL[]
@@ -50,8 +51,6 @@ model UserInfo{
     userId  Int     @unique @map("user_id")
     createdAt     DateTime   @default(now()) @map("created_at")
     updatedAt     DateTime   @updatedAt @map("updated_at")
-    createdAt     DateTime   @default(now()) @map("created_at")
-    updatedAt     DateTime   @updatedAt @map("updated_at")
 
     User    User    @relation(fields:[userId],references:[userId])
 
@@ -74,13 +73,6 @@ model TIL {
   Comment   Comment[]
 
   @@map("til")
-}
-
-enum Visibility {
-  PUBLIC
-  FOLLOWER
-  MANAGER
-  PRIVATE
 }
 
 enum Visibility {
