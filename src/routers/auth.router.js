@@ -108,9 +108,28 @@ router.post('/verify-email', async (req, res, next) => {
     });
     
   } catch(error){
-    await prisma.User.delete({
-      where: {email: email}
-    });
+    const { email } = req.query;
+    //트랙잭션
+    await prisma.$transaction(
+      async (tx) => {
+        const user = await tx.User.findFirst({
+          where: {email: email}
+        });
+
+        await tx.UserInfo.delete({
+          where: {
+            userId: user.userId,
+          },
+        });
+
+        await tx.User.delete({
+          where: {email: email}
+        });
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      }
+    );
     next(error);
   }
 });

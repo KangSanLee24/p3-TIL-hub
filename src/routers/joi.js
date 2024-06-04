@@ -6,7 +6,6 @@ export const createUser = Joi.object({
   password: Joi.string().required().min(6),
   passwordConfirm: Joi.string().required().min(6),
   phoneNumber: Joi.string()
-    .required()
     .pattern(/^(010-\d{3,4}-\d{4})$/),
 });
 
