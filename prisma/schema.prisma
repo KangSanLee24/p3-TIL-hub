@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -14,22 +15,22 @@ datasource db {
 }
 
 model User {
-  userId     Int      @id @default(autoincrement()) @map("user_id")
-  name       String   @map("name")
-  email      String   @unique @map("email")
-  password   String   @map("password")
+  userId      Int      @id @default(autoincrement()) @map("user_id")
+  name        String   @map("name")
+  email       String   @unique @map("email")
+  password    String   @map("password")
   phoneNumber String?  @map("phone_number")
-  role       Role      @default(MEMBER)
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
+  role        Role     @default(MEMBER)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   isDeleted   Boolean  @default(true) @map("is_deleted")
 
-  UserInfo  UserInfo?
-  TIL       TIL[]
-  Comment   Comment[]
-  LikeLog   LikeLog[]
-  FollowedBy  Follow[] @relation("FollowedBy") //
-  Following   Follow[]  @relation("Following") //
+  UserInfo     UserInfo?
+  TIL          TIL[]
+  Comment      Comment[]
+  LikeLog      LikeLog[]
+  FollowedBy   Follow[]      @relation("FollowedBy") //
+  Following    Follow[]      @relation("Following") //
   RefreshToken RefreshToken?
 
   @@map("user")
@@ -40,56 +41,56 @@ enum Role {
   MANAGER
 }
 
-model UserInfo{
-    id          Int      @id @default(autoincrement()) @map("id")
-    description String?     @map("description")
-    profileImage String?      @map("profile_image") 
-    level       Int?        @map("level")
-    trackNumber String?     @map("track_number")
-    userId  Int     @unique @map("user_id")
-    createdAt     DateTime   @default(now()) @map("created_at")
-    updatedAt     DateTime   @updatedAt @map("updated_at")
+model UserInfo {
+  id           Int      @id @default(autoincrement()) @map("id")
+  description  String?  @map("description")
+  profileImage String?  @map("profile_image")
+  level        Int?     @map("level")
+  trackNumber  String?  @map("track_number")
+  userId       Int      @unique @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-    User    User    @relation(fields:[userId],references:[userId])
+  User User @relation(fields: [userId], references: [userId])
 
-    @@map("user_info")
+  @@map("user_info")
 }
 
 model TIL {
   tilId      Int        @id @default(autoincrement()) @map("til_id")
-  UserId        Int        @map("user_Id")
-  title         String     @map("title")
-  category      String?    @map("category")
-  content       String     @map("content")
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
-  hashtag       String?    @map("hashtag")
-  visibility    Visibility  @default(PUBLIC)
+  UserId     Int        @map("user_Id")
+  title      String     @map("title")
+  category   String?    @map("category")
+  content    String     @map("content")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  hashtag    String?    @map("hashtag")
+  visibility Visibility @default(Public)
 
-  User      User      @relation(fields: [UserId], references: [userId])
-  LikeLog   LikeLog[]
-  Comment   Comment[]
+  User    User      @relation(fields: [UserId], references: [userId])
+  LikeLog LikeLog[]
+  Comment Comment[]
 
   @@map("til")
 }
 
 enum Visibility {
-  PUBLIC
-  FOLLOWER
-  MANAGER
-  PRIVATE
+  Public
+  Followers
+  Managers
+  Private
 }
 
 model LikeLog {
-  logId      String    @id @default(uuid()) @map("log_id")
-  TilId      Int       @map("til_id")
-  UserId     Int       @map("user_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
+  logId     String   @id @default(uuid()) @map("log_id")
+  TilId     Int      @map("til_id")
+  UserId    Int      @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  TIL       TIL      @relation(fields: [TilId], references: [tilId])
-  User      User     @relation(fields: [UserId], references: [userId])
+  TIL  TIL  @relation(fields: [TilId], references: [tilId])
+  User User @relation(fields: [UserId], references: [userId])
 
-   @@map("like_log") 
+  @@map("like_log")
 }
 
 model Comment {
@@ -100,30 +101,30 @@ model Comment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  TIL       TIL      @relation(fields: [TilId], references: [tilId])
-  User      User     @relation(fields: [UserId], references: [userId])
+  TIL  TIL  @relation(fields: [TilId], references: [tilId])
+  User User @relation(fields: [UserId], references: [userId])
 
   @@map("comment")
 }
 
 model Follow {
-  id         Int       @id @default(autoincrement())
-  FollowerId Int       @map("follower_id")
-  FolloweeId Int       @map("followee_id")
-  createdAt  DateTime  @default(now())  @map("created_at")
+  id         Int      @id @default(autoincrement())
+  FollowerId Int      @map("follower_id")
+  FolloweeId Int      @map("followee_id")
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  Follower   User      @relation("Following", fields: [FollowerId], references: [userId])
-  Followee   User      @relation("FollowedBy", fields: [FolloweeId], references: [userId])
+  Follower User @relation("Following", fields: [FollowerId], references: [userId])
+  Followee User @relation("FollowedBy", fields: [FolloweeId], references: [userId])
 
   @@map("follow")
 }
 
 model RefreshToken {
-  tokenId    Int     @id @default(autoincrement()) @map("token_id")
-  UserId    Int   @unique   @map("user_id")
-  refreshToken     String   @map("refresh_token")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  tokenId      Int      @id @default(autoincrement()) @map("token_id")
+  UserId       Int      @unique @map("user_id")
+  refreshToken String   @map("refresh_token")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   User User @relation(fields: [UserId], references: [userId], onDelete: Cascade)
 
