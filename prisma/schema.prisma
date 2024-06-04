@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -30,6 +31,7 @@ model User {
   LikeLog   LikeLog[]
   FollowedBy  Follow[] @relation("FollowedBy") //
   Following   Follow[]  @relation("Following") //
+  RefreshToken RefreshToken?
 
   @@map("user")
 }
@@ -46,6 +48,8 @@ model UserInfo{
     level       Int?        @map("level")
     trackNumber String?     @map("track_number")
     userId  Int     @unique @map("user_id")
+    createdAt     DateTime   @default(now()) @map("created_at")
+    updatedAt     DateTime   @updatedAt @map("updated_at")
     createdAt     DateTime   @default(now()) @map("created_at")
     updatedAt     DateTime   @updatedAt @map("updated_at")
 
@@ -70,6 +74,13 @@ model TIL {
   Comment   Comment[]
 
   @@map("til")
+}
+
+enum Visibility {
+  PUBLIC
+  FOLLOWER
+  MANAGER
+  PRIVATE
 }
 
 enum Visibility {
@@ -115,4 +126,16 @@ model Follow {
   Followee   User      @relation("FollowedBy", fields: [FolloweeId], references: [userId])
 
   @@map("follow")
+}
+
+model RefreshToken {
+  tokenId    Int     @id @default(autoincrement()) @map("token_id")
+  UserId    Int   @unique   @map("user_id")
+  refreshToken     String   @map("refresh_token")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  User User @relation(fields: [UserId], references: [userId], onDelete: Cascade)
+
+  @@map("refreshtoken")
 }

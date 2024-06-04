@@ -5,9 +5,7 @@ export const createUser = Joi.object({
   email: Joi.string().required().email(),
   password: Joi.string().required().min(6),
   passwordConfirm: Joi.string().required().min(6),
-  phoneNumber: Joi.string()
-    .required()
-    .pattern(/^(010-\d{3,4}-\d{4})$/),
+  phoneNumber: Joi.string().pattern(/^(010-\d{3,4}-\d{4})$/),
 });
 
 export const loginUser = Joi.object({
@@ -42,4 +40,13 @@ export const updateUser = Joi.object({
     "string.empty": "프로필 이미지 URL을 입력해주세요.",
     "string.max": "프로필 이미지 URL은 최대 500자까지 입력할 수 있습니다.",
   }),
+});
+
+export const postTIL = Joi.object({
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+  category: Joi.string().required(),
+  visibility: Joi.string()
+    .valid("PUBLIC", "FOLLOWER", "MANAGER", "PRIVATE")
+    .required(),
 });

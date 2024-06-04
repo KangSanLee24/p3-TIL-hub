@@ -11,6 +11,17 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
     const params = req.params;
     const followeeId = params.user_id;
 
+    const isExistUser = await prisma.User.findFirst({
+      where: { userId: +followeeId },
+    });
+
+    if (!isExistUser) {
+      return res.status(400).json({
+        status: 400,
+        message: "해당 ID를 가진 사용자가 존재하지 않습니다.",
+      });
+    }
+
     const findFollower = await prisma.Follow.findFirst({
       where: { FollowerId: userId, FolloweeId: +followeeId },
     });
@@ -45,6 +56,17 @@ router.delete("/:user_id", accessMiddleware, async (req, res, next) => {
     const { userId } = req.user;
     const params = req.params;
     const followeeId = params.user_id;
+
+    const isExistUser = await prisma.User.findFirst({
+      where: { userId: +followeeId },
+    });
+
+    if (!isExistUser) {
+      return res.status(400).json({
+        status: 400,
+        message: "해당 ID를 가진 사용자가 존재하지 않습니다.",
+      });
+    }
 
     const findFollower = await prisma.Follow.findFirst({
       where: {
