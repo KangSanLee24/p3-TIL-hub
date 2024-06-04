@@ -627,7 +627,7 @@ is-number@^7.0.0:
 
 joi@^17.13.1:
   version "17.13.1"
-  resolved "https://registry.npmjs.org/joi/-/joi-17.13.1.tgz"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-17.13.1.tgz#9c7b53dc3b44dd9ae200255cc3b398874918a6ca"
   integrity sha512-vaBlIKCyo4FCUtCm7Eu4QZd/q02bWcxfUO6YSXAZOWF6gzcLBeba8kwotUdYJjDLW8Cz8RywsSOqiNJZW0mNvg==
   dependencies:
     "@hapi/hoek" "^9.3.0"
