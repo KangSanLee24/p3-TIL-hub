@@ -5,6 +5,7 @@ import { updateUser } from "../middlewares/joi.js";
 
 const router = express.Router();
 
+// 내 정보 조회/user
 router.get("/", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
