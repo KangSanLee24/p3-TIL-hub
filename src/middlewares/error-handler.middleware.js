@@ -34,6 +34,7 @@ export default function (err, req, res, next) {
       case '"passwordConfirm" must be a string':
         errorMessage = "확인 비밀번호를 문자열로 입력해 주세요.";
         break;
+      case '"passwordConfirm" is not allowed to be empty':
       case '"passwordConfirm" is required':
         errorMessage = "확인 비밀번호를 입력해 주세요.";
         break;
