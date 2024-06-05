@@ -28,8 +28,8 @@ router.get('/aggregate', requireAccessToken, async (req, res, next) => {
                 created_at
             from
                 til
-            where
-            created_at >= NOW() - INTERVAL 7 DAY) a
+            where created_at >= NOW() - INTERVAL 7 DAY
+            and visibility = 'PUBLIC') a
         join 
         (
             select
