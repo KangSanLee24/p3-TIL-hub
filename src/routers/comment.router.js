@@ -2,44 +2,50 @@ import express from "express";
 import { prisma } from "../utils/prisma/index.js";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 import { postComment, listComment } from "../middlewares/joi.js";
+import { requireDetailRoles } from "../middlewares/require-roles.middleware.js";
 
 const router = express.Router();
 
 /** 댓글 작성 API  **/
-router.post("/:til_id/comment", requireAccessToken, async (req, res, next) => {
-  try {
-    const { userId } = req.user;
-    const tilId = req.params.til_id;
-    const { content } = req.body;
+router.post(
+  "/:til_id/comment",
+  requireAccessToken,
+  requireDetailRoles,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.user;
+      const tilId = req.params.til_id;
+      const { content } = req.body;
 
-    //joi 유효성 검사
-    await postComment.validateAsync(req.body);
+      //joi 유효성 검사
+      await postComment.validateAsync(req.body);
 
-    // til이 존재하는지.
-    const til = await prisma.TIL.findFirst({
-      where: {
-        tilId: +tilId,
-      },
-    });
-    if (!til)
-      return res
-        .status(404)
-        .json({ errorMessage: "게시글이 존재하지 않습니다." });
+      // til이 존재하는지.
+      const til = await prisma.TIL.findFirst({
+        where: {
+          tilId: +tilId,
+        },
+      });
+      if (!til)
+        return res
+          .status(404)
+          .json({ errorMessage: "게시글이 존재하지 않습니다." });
 
-    // Comment테이블에 댓글 생성.
-    const comment = await prisma.Comment.create({
-      data: {
-        TilId: +tilId,
-        UserId: +userId,
-        content: content,
-      },
-    });
+      // Comment테이블에 댓글 생성.
+      const comment = await prisma.Comment.create({
+        data: {
+          TilId: +tilId,
+          UserId: +userId,
+          content: content,
+        },
+      });
 
-    return res.status(201).json({ data: comment });
-  } catch (error) {
-    next(error);
+      return res.status(201).json({ data: comment });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /** 댓글 조회 API **/
 router.get("/:til_id/comment", requireAccessToken, async (req, res, next) => {
@@ -151,71 +157,4 @@ router.delete(
   }
 );
 
-// /** 댓글 좋아요 **/
-// router.post(
-//   "/:til_id/comment/like",
-//   requireAccessToken,
-//   async (req, res, next) => {
-//     try {
-//       // 유효한 사용자인지 확인
-//       const { userId } = req.user;
-
-//       // TIL 게시글 존재 여부 확인
-//       const tilId = req.params.til_id;
-//       const til = await prisma.TIL.findFirst({
-//         where: {
-//           tilId: +tilId,
-//         },
-//       });
-//       if (!til)
-//         return res
-//           .status(404)
-//           .json({ errorMessage: "게시글이 존재하지 않습니다." });
-
-//       // // 댓글 생성
-//       // const { content } = req.body;
-//       // const comment = await prisma.Comment.create({
-//       //   data: {
-//       //     TilId: +tilId,
-//       //     UserId: +userId,
-//       //     content: content,
-//       //   },
-//       // });
-
-//       // 성공 응답 반환
-//       return res.status(201).json({ message: "Hello, World!" });
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-/** 댓글 좋아요 **/
-router.post(
-  "/comment/:comment_id/like",
-  requireAccessToken,
-  async (req, res, next) => {
-    try {
-      // 유효한 사용자인지 확인
-      const { userId } = req.user;
-
-      // TIL 게시글 존재 여부 확인
-      const tilId = req.params.til_id;
-      const til = await prisma.TIL.findFirst({
-        where: {
-          tilId: +tilId,
-        },
-      });
-      if (!til)
-        return res
-          .status(404)
-          .json({ errorMessage: "게시글이 존재하지 않습니다." });
-
-      // 성공 응답 반환
-      return res.status(201).json({ message: "Hello, World!" });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 export default router;
