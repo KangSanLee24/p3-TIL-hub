@@ -136,7 +136,7 @@ router.post("/sign-in", async (req, res, next) => {
         UserId: user.userId,
       },
     });
-
+    
     if (existingToken) {
       await prisma.RefreshToken.update({
         where: {
