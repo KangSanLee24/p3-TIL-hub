@@ -6,6 +6,7 @@ import PostRouter from "./routers/post.router.js";
 import AuthRouter from "./routers/auth.router.js";
 import FollowRouter from "./routers/follow.router.js";
 import errorHandingMiddleware from "./middlewares/error-handler.middleware.js";
+import deleteExpiredUsers from "./routers/delete-user.router.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use("/user", [UserRouter]);
 app.use("/post", [PostRouter]);
 app.use("/follow", [FollowRouter]);
 app.use(errorHandingMiddleware);
+
+setInterval(deleteExpiredUsers, 60 * 1000); //1분에 한번씩 실행
 
 app.listen(SEVER_PORT, () => {
   console.log(SEVER_PORT, "포트로 서버가 열렸어요!");

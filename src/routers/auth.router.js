@@ -76,6 +76,7 @@ router.post("/sign-up", async (req, res, next) => {
       subject: '[tilhub] 회원가입 인증 메일입니다.',
       html: `<form action="${url}" method="POST">
       <h2 style="margin: 20px 0">[tilhub] 이메일 인증 버튼을 클릭해 주세요.</h2>
+      <p> 인증 유효시간은 3분 입니다. 3분 안에 버튼을 클릭해 주세요! <p>
       <button style=" background-color: #c0c0c0; color:#000000; width: 80px; height:40px; border-radius: 20px; border: none;">이메일 인증</button>
     </form>`,
     });
