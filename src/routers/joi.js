@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+// 사용자 생성 유효성 검사
 export const createUser = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required().email(),
@@ -10,11 +11,13 @@ export const createUser = Joi.object({
     .pattern(/^(010-\d{3,4}-\d{4})$/),
 });
 
+// 사용자 로그인 유효성 검사
 export const loginUser = Joi.object({
   email: Joi.string().required().email(),
   password: Joi.string().required().min(6),
 });
 
+// 사용자 업데이트 유효성 검사
 export const updateUser = Joi.object({
   name: Joi.string()
     .required()
@@ -42,4 +45,17 @@ export const updateUser = Joi.object({
     "string.empty": "프로필 이미지 URL을 입력해주세요.",
     "string.max": "프로필 이미지 URL은 최대 500자까지 입력할 수 있습니다.",
   }),
+});
+
+// 좋아요 관련 유효성 검사
+export const likeSchema = Joi.object({
+  til_id: Joi.string().required(), 
+});
+
+// 게시물 생성 및 수정 유효성 검사
+export const postTIL = Joi.object({
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+  category: Joi.string().required(),
+  visibility: Joi.string().valid('PUBLIC', 'PRIVATE').required()
 });

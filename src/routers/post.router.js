@@ -11,12 +11,16 @@ router.post("/", requireAccessToken, async (req, res, next) => {
     const { title, content, category, visibility } = req.body;
     const { userId } = req.user;
 
+    // 필수 정보가 입력되었는지 확인
     if (!title || !content || !category || !visibility) {
-      return res
-        .status(400)
-        .json({ status: 400, errorMessage: "모든 필드를 입력해 주세요." });
+      return res.status(400).json({ status: 400, message: "제목, 내용, 카테고리, 공개 범위를 모두 입력해 주세요." });
     }
-    await postTIL.validateAsync(req.body);
+
+    // Joi 검증
+    const { error } = postTIL.validate(req.body);
+    if (error) {
+      return res.status(400).json({ status: 400, message: error.details[0].message });
+    }
 
     const post = await prisma.TIL.create({
       data: {
@@ -28,15 +32,9 @@ router.post("/", requireAccessToken, async (req, res, next) => {
       },
     });
 
-    return res.status(201).json({
-      status: 201,
-      message: "게시글 등록에 성공했습니다.",
-      data: post,
-    });
+    return res.status(201).json({ status: 201, message: "게시글 등록에 성공했습니다.", data: post });
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, errorMessage: "게시글 등록에 실패했습니다." });
+    res.status(500).json({ status: 500, message: "게시글 등록에 실패했습니다." });
   }
 });
 
@@ -44,11 +42,12 @@ router.post("/", requireAccessToken, async (req, res, next) => {
 router.get("/", requireAccessToken, async (req, res, next) => {
   try {
     const sort = req.query.sort || "desc";
+    const sortBy = req.query.sortBy || "createdAt"; 
+
+    const orderBy = sortBy === "likes" ? { LikeLog: { _count: sort } } : { createdAt: sort };
 
     const posts = await prisma.TIL.findMany({
-      orderBy: {
-        createdAt: sort,
-      },
+      orderBy: orderBy,
       include: {
         LikeLog: true,
         User: {
@@ -90,28 +89,27 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
     const { userId } = req.user;
     const { title, content, category, visibility } = req.body;
 
+    // 필수 정보가 입력되었는지 확인
     if (!title || !content || !category || !visibility) {
-      return res
-        .status(400)
-        .json({ status: 400, errorMessage: "모든 필드를 입력해 주세요." });
+      return res.status(400).json({ status: 400, message: "수정할 정보를 입력해 주세요." });
+    }
+
+    // Joi 검증
+    const { error } = postTIL.validate(req.body);
+    if (error) {
+      return res.status(400).json({ status: 400, message: error.details[0].message });
     }
 
     const post = await prisma.TIL.update({
       where: { tilId: +tilId, UserId: +userId },
-      data: {
-        title,
-        content,
-        category,
-        visibility,
-      },
+      data: { title, content, category, visibility },
     });
 
-    return res.status(200).json({
-      status: 200,
-      message: "게시글 수정에 성공했습니다.",
-      data: post,
-    });
+    return res.status(200).json({ status: 200, message: "게시글 수정에 성공했습니다.", data: post });
   } catch (error) {
+    if (error.message === "인증 정보가 없습니다." || error.message === "인증 정보가 유효하지 않습니다." || error.message === "인증 정보가 만료되었습니다.") {
+      return res.status(401).json({ status: 401, message: error.message });
+    }
     next(error);
   }
 });
@@ -121,10 +119,14 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
   const tilId = req.params.til_id;
 
   try {
+    const post = await prisma.TIL.findUnique({ where: { tilId: parseInt(tilId) } });
+    
+    if (!post) {
+      return res.status(400).json({ status: 400, message: "게시글이 존재하지 않습니다." });
+    }
+
     await prisma.TIL.delete({ where: { tilId: parseInt(tilId) } });
-    return res
-      .status(200)
-      .json({ status: 200, message: "게시글 삭제에 성공했습니다." });
+    return res.status(200).json({ status: 200, message: "게시글 삭제에 성공했습니다." });
   } catch (error) {
     next(error);
   }
