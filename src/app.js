@@ -4,6 +4,7 @@ import { SERVER_PORT } from "./constants/env.constant.js";
 import UserRouter from "./routers/user.router.js";
 import PostRouter from "./routers/post.router.js";
 import AuthRouter from "./routers/auth.router.js";
+import LikesRouter from "./routers/likes.js";
 import FollowRouter from "./routers/follow.router.js";
 import CommentRouter from "./routers/comment.router.js";
 import CommentLikeRouter from "./routers/comment-like.router.js";
