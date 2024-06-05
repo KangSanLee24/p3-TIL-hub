@@ -1,58 +1,64 @@
 import express from "express";
 import { prisma } from "../utils/prisma/index.js";
+import { requireDetailRoles } from "../middlewares/require-roles.middleware.js";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 // import { likeSchema } from "../middlewares/joi.js";
 
 const router = express.Router();
 
 // 좋아요 생성
-router.post("/:til_id/like", requireAccessToken, async (req, res, next) => {
-  const { userId } = req.user;
-  const tilId = parseInt(req.params.til_id, 10);
+router.post(
+  "/:til_id/like",
+  requireAccessToken,
+  requireDetailRoles,
+  async (req, res, next) => {
+    const { userId } = req.user;
+    const tilId = parseInt(req.params.til_id, 10);
 
-  // Joi 검증
-  // const { error } = likeSchema.validate({ til_id: req.params.til_id });
-  // if (error) {
-  //   return res.status(400).json({ errorMessage: error.details[0].message });
-  // }
+    // Joi 검증
+    // const { error } = likeSchema.validate({ til_id: req.params.til_id });
+    // if (error) {
+    //   return res.status(400).json({ errorMessage: error.details[0].message });
+    // }
 
-  try {
-    const til = await prisma.TIL.findUnique({
-      where: { tilId: tilId },
-      include: { user: true },
-    });
+    try {
+      const til = await prisma.TIL.findUnique({
+        where: { tilId: tilId },
+        include: { User: true },
+      });
 
-    if (!til) {
-      return res
-        .status(404)
-        .json({ errorMessage: "게시글이 존재하지 않습니다." });
+      if (!til) {
+        return res
+          .status(404)
+          .json({ errorMessage: "게시글이 존재하지 않습니다." });
+      }
+
+      if (til.UserId === userId) {
+        return res
+          .status(400)
+          .json({ error: "자신의 게시글에는 좋아요를 누를 수 없습니다." });
+      }
+
+      const existingLike = await prisma.likeLog.findFirst({
+        where: { TilId: tilId, UserId: userId },
+      });
+
+      if (existingLike) {
+        return res.status(400).json({ error: "이미 좋아요한 게시물입니다." });
+      }
+
+      const newLike = await prisma.likeLog.create({
+        data: { TilId: tilId, UserId: userId },
+      });
+
+      res
+        .status(201)
+        .json({ message: "좋아요 생성에 성공했습니다.", like: newLike });
+    } catch (error) {
+      next(error);
     }
-
-    if (til.UserId === userId) {
-      return res
-        .status(400)
-        .json({ error: "자신의 게시글에는 좋아요를 누를 수 없습니다." });
-    }
-
-    const existingLike = await prisma.likeLog.findFirst({
-      where: { TilId: tilId, UserId: userId },
-    });
-
-    if (existingLike) {
-      return res.status(400).json({ error: "이미 좋아요한 게시물입니다." });
-    }
-
-    const newLike = await prisma.likeLog.create({
-      data: { TilId: tilId, UserId: userId },
-    });
-
-    res
-      .status(201)
-      .json({ message: "좋아요 생성에 성공했습니다.", like: newLike });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // 좋아요 삭제
 router.delete("/:til_id/like", requireAccessToken, async (req, res, next) => {
