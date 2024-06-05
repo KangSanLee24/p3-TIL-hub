@@ -155,4 +155,71 @@ router.delete(
   }
 );
 
+// /** 댓글 좋아요 **/
+// router.post(
+//   "/:til_id/comment/like",
+//   requireAccessToken,
+//   async (req, res, next) => {
+//     try {
+//       // 유효한 사용자인지 확인
+//       const { userId } = req.user;
+
+//       // TIL 게시글 존재 여부 확인
+//       const tilId = req.params.til_id;
+//       const til = await prisma.TIL.findFirst({
+//         where: {
+//           tilId: +tilId,
+//         },
+//       });
+//       if (!til)
+//         return res
+//           .status(404)
+//           .json({ errorMessage: "게시글이 존재하지 않습니다." });
+
+//       // // 댓글 생성
+//       // const { content } = req.body;
+//       // const comment = await prisma.Comment.create({
+//       //   data: {
+//       //     TilId: +tilId,
+//       //     UserId: +userId,
+//       //     content: content,
+//       //   },
+//       // });
+
+//       // 성공 응답 반환
+//       return res.status(201).json({ message: "Hello, World!" });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
+
+/** 댓글 좋아요 **/
+router.post(
+  "/comment/:comment_id/like",
+  requireAccessToken,
+  async (req, res, next) => {
+    try {
+      // 유효한 사용자인지 확인
+      const { userId } = req.user;
+
+      // TIL 게시글 존재 여부 확인
+      const tilId = req.params.til_id;
+      const til = await prisma.TIL.findFirst({
+        where: {
+          tilId: +tilId,
+        },
+      });
+      if (!til)
+        return res
+          .status(404)
+          .json({ errorMessage: "게시글이 존재하지 않습니다." });
+
+      // 성공 응답 반환
+      return res.status(201).json({ message: "Hello, World!" });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 export default router;
