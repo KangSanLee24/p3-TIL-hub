@@ -1,7 +1,7 @@
 import express from "express";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 import { prisma } from "../utils/prisma/index.js";
-import { postTIL } from "../middlewares/joi.js";
+import { postTIL, listComment } from "../middlewares/joi.js";
 import {
   requireListRoles,
   requireDetailRoles,
@@ -81,6 +81,9 @@ router.get("/", requireListRoles, async (req, res, next) => {
     // const orderBy =
     //   sortBy === "likes" ? { LikeLog: { _count: sort } } : { createdAt: sort };
     // 이렇게 하면 sort: likes로 입력해도 정렬되는데 이건 어때요?
+
+    await listComment.validateAsync(req.query);
+
     const sort = req.query.sort || "desc";
     let orderBy;
 
