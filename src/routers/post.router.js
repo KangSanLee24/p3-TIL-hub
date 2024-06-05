@@ -18,14 +18,18 @@ router.post("/", requireAccessToken, async (req, res, next) => {
 
     // 필수 정보가 입력되었는지 확인
     if (!title || !content || !category || !visibility) {
-      return res.status(400).json({ status: 400, message: "제목, 내용, 카테고리, 공개 범위를 모두 입력해 주세요." });
+      return res.status(400).json({
+        status: 400,
+        message: "제목, 내용, 카테고리, 공개 범위를 모두 입력해 주세요.",
+      });
     }
 
     // Joi 검증
-    const { error } = postTIL.validate(req.body);
-    if (error) {
-      return res.status(400).json({ status: 400, message: error.details[0].message });
-    }
+    await postTIL.validateAsync(req.body);
+    // const { error } = postTIL.validate(req.body);
+    // if (error) {
+    //   return res.status(400).json({ status: 400, message: error.details[0].message });
+    // }
 
     const post = await prisma.TIL.create({
       data: {
@@ -37,9 +41,13 @@ router.post("/", requireAccessToken, async (req, res, next) => {
       },
     });
 
-    return res.status(201).json({ status: 201, message: "게시글 등록에 성공했습니다.", data: post });
+    return res.status(201).json({
+      status: 201,
+      message: "게시글 등록에 성공했습니다.",
+      data: post,
+    });
   } catch (error) {
-    res.status(500).json({ status: 500, message: "게시글 등록에 실패했습니다." });
+    next(error);
   }
 });
 
@@ -67,16 +75,29 @@ router.get("/", requireListRoles, async (req, res, next) => {
       }
     }
 
-    const sort = req.query.sort || "desc";
-    const sortBy = req.query.sortBy || "createdAt"; 
+    // const sort = req.query.sort || "desc";
+    // const sortBy = req.query.sortBy || "createdAt";
 
-    const orderBy = sortBy === "likes" ? { LikeLog: { _count: sort } } : { createdAt: sort };
+    // const orderBy =
+    //   sortBy === "likes" ? { LikeLog: { _count: sort } } : { createdAt: sort };
+    // 이렇게 하면 sort: likes로 입력해도 정렬되는데 이건 어때요?
+    const sort = req.query.sort || "desc";
+    let orderBy;
+
+    if (sort === "asc" || sort === "desc") {
+      // asc나 desc로 입력했을때,
+      orderBy = { createdAt: sort };
+    } else if (sort === "likes") {
+      // sort:likes로 입력했을때는 좋아요 많은 순서
+      orderBy = { LikeLog: { _count: "desc" } };
+    } else {
+      // 기본적으로(입력안하면) 내림차순(최신순)
+      orderBy = { createdAt: "desc" };
+    }
 
     const posts = await prisma.TIL.findMany({
       where: whereCondition,
-      orderBy: {
-        createdAt: sort,
-      },
+      orderBy: orderBy,
       include: {
         LikeLog: true,
         User: {
@@ -183,14 +204,19 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
 
     // 필수 정보가 입력되었는지 확인
     if (!title || !content || !category || !visibility) {
-      return res.status(400).json({ status: 400, message: "수정할 정보를 입력해 주세요." });
+      return res
+        .status(400)
+        .json({ status: 400, message: "수정할 정보를 모두 입력해 주세요." });
     }
 
     // Joi 검증
-    const { error } = postTIL.validate(req.body);
-    if (error) {
-      return res.status(400).json({ status: 400, message: error.details[0].message });
-    }
+    await postTIL.validateAsync(req.body);
+    // const { error } = postTIL.validate(req.body);
+    // if (error) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, message: error.details[0].message });
+    // }
 
     // 접근가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
     const isExistTIL = await prisma.TIL.findFirst({
@@ -203,18 +229,17 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
       });
     }
 
-    
-
     const post = await prisma.TIL.update({
       where: { tilId: +tilId, UserId: +userId },
       data: { title, content, category, visibility },
     });
 
-    return res.status(200).json({ status: 200, message: "게시글 수정에 성공했습니다.", data: post });
+    return res.status(200).json({
+      status: 200,
+      message: "게시글 수정에 성공했습니다.",
+      data: post,
+    });
   } catch (error) {
-    if (error.message === "인증 정보가 없습니다." || error.message === "인증 정보가 유효하지 않습니다." || error.message === "인증 정보가 만료되었습니다.") {
-      return res.status(401).json({ status: 401, message: error.message });
-    }
     next(error);
   }
 });
@@ -267,7 +292,15 @@ router.get(
             },
           },
           LikeLog: true,
-          Comment: true,
+          Comment: {
+            include: {
+              User: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -290,13 +323,18 @@ router.get(
           category: post.category,
           visibility: post.visibility,
           likeNumber: post.LikeLog.length,
-          comments: post.Comment,
           createdAt: post.createdAt,
           updatedAt: post.updatedAt,
+          comments: post.Comment.map((comment) => ({
+            userName: comment.User.name,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+          })),
         },
       });
-    } catch (err) {
-      res.status(500).json({ status: 500, message: err.message });
+    } catch (error) {
+      next(error);
     }
   }
 );
