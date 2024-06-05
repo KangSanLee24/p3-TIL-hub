@@ -15,13 +15,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use("/auth", [AuthRouter]);
-app.use("/user", [UserRouter]);
-app.use("/til", [PostRouter, CommentRouter]);
+app.use("/auth", AuthRouter);
+app.use("/user", UserRouter);
+app.use("/til", [PostRouter, CommentRouter, LikesRouter]);
 app.use("/comment", [CommentLikeRouter]);
-app.use("/follow", [FollowRouter]);
-app.use(errorHandingMiddleware);
+app.use("/follow", FollowRouter);
+app.use(errorHandlerMiddleware);
 
 app.listen(SERVER_PORT, () => {
-  console.log(SERVER_PORT, "포트로 서버가 열렸어요!");
+  console.log(`서버가 ${SERVER_PORT} 포트로 열렸어요!`);
 });
