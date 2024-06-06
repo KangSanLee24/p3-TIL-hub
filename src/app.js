@@ -6,6 +6,7 @@ import PostRouter from "./routers/post.router.js";
 import AuthRouter from "./routers/auth.router.js";
 import LikesRouter from "./routers/likes.js";
 import FollowRouter from "./routers/follow.router.js";
+import deleteExpiredUsers from "./routers/delete-user.router.js";
 import CommentRouter from "./routers/comment.router.js";
 import errorHandlerMiddleware from "./middlewares/error-handler.middleware.js";
 import goodPostRouter from './routers/good-post.router.js';
@@ -24,6 +25,9 @@ app.use("/comment", [CommentLikeRouter]);
 app.use("/follow", FollowRouter);
 app.use(errorHandlerMiddleware);
 
+setInterval(deleteExpiredUsers, 60 * 1000); //1분에 한번씩 실행
+
 app.listen(SERVER_PORT, () => {
   console.log(`서버가 ${SERVER_PORT} 포트로 열렸어요!`);
+
 });
