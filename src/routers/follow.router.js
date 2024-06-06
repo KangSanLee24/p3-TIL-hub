@@ -11,6 +11,17 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
     const params = req.params;
     const followeeId = params.user_id;
 
+    const isExistUser = await prisma.User.findFirst({
+      where: { userId: +followeeId },
+    });
+
+    if (!isExistUser) {
+      return res.status(400).json({
+        status: 400,
+        message: "해당 ID를 가진 사용자가 존재하지 않습니다.",
+      });
+    }
+
     const findFollower = await prisma.Follow.findFirst({
       where: { FollowerId: userId, FolloweeId: +followeeId },
     });
@@ -27,12 +38,28 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
         FollowerId: userId,
         FolloweeId: +followeeId,
       },
+      include: {
+        Follower: {
+          select: {
+            name: true,
+          },
+        },
+        Followee: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     return res.status(201).json({
       status: 201,
       message: "구독 신청에 성공했습니다.",
-      data: follower,
+      data: {
+        followerName: follower.Follower.name,
+        followeeName: follower.Followee.name,
+        createdAt: follower.createdAt,
+      },
     });
   } catch (error) {
     next(error);
@@ -46,6 +73,17 @@ router.delete("/:user_id", accessMiddleware, async (req, res, next) => {
     const params = req.params;
     const followeeId = params.user_id;
 
+    const isExistUser = await prisma.User.findFirst({
+      where: { userId: +followeeId },
+    });
+
+    if (!isExistUser) {
+      return res.status(400).json({
+        status: 400,
+        message: "해당 ID를 가진 사용자가 존재하지 않습니다.",
+      });
+    }
+
     const findFollower = await prisma.Follow.findFirst({
       where: {
         FollowerId: userId,
@@ -54,14 +92,37 @@ router.delete("/:user_id", accessMiddleware, async (req, res, next) => {
       select: { id: true },
     });
 
-    const follower = await prisma.Follow.delete({
-      where: { id: findFollower.id },
+    if (!findFollower) {
+      return res.status(400).json({
+        status: 400,
+        message: "팔로우 중이 아닙니다.",
+      });
+    }
+
+    const responseFollower = await prisma.Follow.create({
+      data: {
+        FollowerId: userId,
+        FolloweeId: +followeeId,
+      },
+      include: {
+        Follower: {
+          select: {
+            name: true,
+          },
+        },
+        Followee: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
 
     return res.status(200).json({
       status: 200,
       message: "구독 취소에 성공했습니다.",
-      data: follower,
+      followerName: responseFollower.Follower.name,
+      followeeName: responseFollower.Followee.name,
     });
   } catch (error) {
     next(error);

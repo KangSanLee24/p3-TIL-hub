@@ -1,11 +1,11 @@
 import express from "express";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
 import { prisma } from "../utils/prisma/index.js";
-import { updateUser } from "./joi.js";
+import { updateUser } from "../middlewares/joi.js";
 
 const router = express.Router();
 
-// 내 정보 조회
+// 내 정보 조회/user
 router.get("/", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
@@ -46,24 +46,38 @@ router.get("/", requireAccessToken, async (req, res, next) => {
   }
 });
 
-// 내 정보 수정
-router.put("/", requireAccessToken, async (req, res, next) => {
+// 내 정보 수정/user
+router.patch("/", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
-    const { name, phoneNumber, description, profileImage } = req.body;
+    const { name, phoneNumber, description, profileImage, trackNumber } =
+      req.body;
+    const dataToUpdate = {};
+
     await updateUser.validateAsync(req.body);
-    const updatedUser = await prisma.user.update({
-      where: { userId },
-      data: {
-        name,
-        phoneNumber,
-        UserInfo: {
-          update: {
-            description,
-            profileImage,
-          },
-        },
-      },
+
+    if (name) dataToUpdate.name = name;
+    if (phoneNumber) dataToUpdate.phoneNumber = phoneNumber;
+
+    if (description || profileImage || trackNumber) {
+      dataToUpdate.UserInfo = {};
+      dataToUpdate.UserInfo.update = {};
+      if (trackNumber) dataToUpdate.UserInfo.update.trackNumber = trackNumber;
+      if (description) dataToUpdate.UserInfo.update.description = description;
+      if (profileImage)
+        dataToUpdate.UserInfo.update.profileImage = profileImage;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "수정할 내용이 없습니다.",
+      });
+    }
+
+    const updatedUser = await prisma.User.update({
+      where: { userId: +userId },
+      data: dataToUpdate,
       include: {
         UserInfo: true,
       },
@@ -75,9 +89,12 @@ router.put("/", requireAccessToken, async (req, res, next) => {
       data: {
         userId,
         name: updatedUser.name,
+        email: updatedUser.email,
         phoneNumber: updatedUser.phoneNumber,
-        description: updatedUser.UserInfo.description,
-        profileImage: updatedUser.UserInfo.profileImage,
+        role: updatedUser.role,
+        description: updatedUser.UserInfo?.description,
+        profileImage: updatedUser.UserInfo?.profileImage,
+        trackNumber: updatedUser.UserInfo?.trackNumber,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
       },
@@ -87,7 +104,7 @@ router.put("/", requireAccessToken, async (req, res, next) => {
   }
 });
 
-// 다른 유저 조회
+// 다른 유저 조회/user/:id
 router.get("/:id", requireAccessToken, async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id, 10);

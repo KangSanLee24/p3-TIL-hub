@@ -1,0 +1,6 @@
+export const VISIBILITY = {
+  PUBLIC: "PUBLIC",
+  FOLLOWER: "FOLLOWER",
+  MANAGER: "MANAGER",
+  PRIVATE: "PRIVATE",
+};

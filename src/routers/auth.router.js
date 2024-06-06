@@ -2,7 +2,7 @@ import express from "express";
 import { prisma } from "../utils/prisma/index.js";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { createUser, loginUser } from "./joi.js";
+import { createUser, loginUser } from "../middlewares/joi.js";
 import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import { REFRESH_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
@@ -192,7 +192,7 @@ router.post("/sign-in", async (req, res, next) => {
         UserId: user.userId,
       },
     });
-
+    
     if (existingToken) {
       await prisma.RefreshToken.update({
         where: {

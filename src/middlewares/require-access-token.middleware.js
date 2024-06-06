@@ -29,21 +29,6 @@ export default async function (req, res, next) {
       where: { userId: +userId },
     });
 
-    // const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
-    // const userId = decodedToken.userId;
-
-    // const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET_KEY);
-    // const userId = decodedToken.userId;
-
-    // const user = await prisma.User.findFirst({
-    //   where: { userId: +userId },
-    //   include: {
-    //     UserInfo: true,
-    //   },
-    //   // 내정보 조회시 비밀번호 예외처리
-    //   omit: { password: true, isDeleted: true },
-    // });
-
     if (!user) {
       return res.status(401).json({
         status: 401,
