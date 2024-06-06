@@ -7,8 +7,9 @@ import AuthRouter from "./routers/auth.router.js";
 import LikesRouter from "./routers/likes.js";
 import FollowRouter from "./routers/follow.router.js";
 import CommentRouter from "./routers/comment.router.js";
+import errorHandingMiddleware from "./middlewares/error-handler.middleware.js";
+import goodPostRouter from './routers/good-post.router.js';
 import CommentLikeRouter from "./routers/comment-like.router.js";
-import errorHandlerMiddleware from "./middlewares/error-handler.middleware.js";
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.use(cookieParser());
 
 app.use("/auth", AuthRouter);
 app.use("/user", UserRouter);
-app.use("/til", [PostRouter, CommentRouter, LikesRouter]);
+app.use("/til", [PostRouter, CommentRouter, LikesRouter, goodPostRouter]);
 app.use("/comment", [CommentLikeRouter]);
 app.use("/follow", FollowRouter);
 app.use(errorHandlerMiddleware);
