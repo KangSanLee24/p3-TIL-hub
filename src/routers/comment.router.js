@@ -29,7 +29,7 @@ router.post(
       if (!til)
         return res
           .status(404)
-          .json({ errorMessage: "게시글이 존재하지 않습니다." });
+          .json({ status: 404, errorMessage: "게시글이 존재하지 않습니다." });
 
       // Comment테이블에 댓글 생성.
       const comment = await prisma.Comment.create({
@@ -38,9 +38,27 @@ router.post(
           UserId: +userId,
           content: content,
         },
+        include: {
+          User: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
-      return res.status(201).json({ data: comment });
+      return res.status(201).json({
+        status: 201,
+        message: "댓글 등록에 성공했습니다.",
+        data: {
+          id: comment.id,
+          tilId: comment.tilId,
+          userName: comment.User.name,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        },
+      });
     } catch (error) {
       next(error);
     }
@@ -48,38 +66,72 @@ router.post(
 );
 
 /** 댓글 조회 API **/
-router.get("/:til_id/comment", requireAccessToken, async (req, res, next) => {
-  try {
-    const tilId = req.params.til_id;
+router.get(
+  "/:til_id/comment",
+  requireAccessToken,
+  requireDetailRoles,
+  async (req, res, next) => {
+    try {
+      const tilId = req.params.til_id;
 
-    await listComment.validateAsync(req.query);
+      await listComment.validateAsync(req.query);
 
-    const sortOrder = req.query.sort?.toLowerCase() === "asc" ? "asc" : "desc";
+      const sort = req.query.sort || "desc";
+      let orderBy;
 
-    const til = await prisma.TIL.findFirst({
-      where: {
-        tilId: +tilId,
-      },
-    });
-    if (!til)
-      return res
-        .status(404)
-        .json({ errorMessage: "게시글이 존재하지 않습니다." });
+      if (sort === "asc" || sort === "desc") {
+        // asc나 desc로 입력했을때,
+        orderBy = { createdAt: sort };
+      } else if (sort === "likes") {
+        // sort:likes로 입력했을때는 좋아요 많은 순서
+        orderBy = { LikeLog: { _count: "desc" } };
+      } else {
+        // 기본적으로(입력안하면) 내림차순(최신순)
+        orderBy = { createdAt: "desc" };
+      }
 
-    const comments = await prisma.comment.findMany({
-      where: {
-        TilId: +tilId,
-      },
-      orderBy: {
-        createdAt: sortOrder,
-      },
-    });
+      const til = await prisma.TIL.findFirst({
+        where: {
+          tilId: +tilId,
+        },
+      });
+      if (!til)
+        return res
+          .status(404)
+          .json({ errorMessage: "게시글이 존재하지 않습니다." });
 
-    return res.status(200).json({ data: comments });
-  } catch (error) {
-    next(error);
+      const comments = await prisma.Comment.findMany({
+        where: {
+          TilId: +tilId,
+        },
+        orderBy: orderBy,
+        include: {
+          User: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      // 이쁘게 가공
+      const response = comments.map((comment) => ({
+        id: comment.id,
+        tilId: comment.TilId,
+        userName: comment.User.name,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+      }));
+      return res.status(200).json({
+        status: 200,
+        message: "댓글 목록 조회에 성공했습니다.",
+        data: response,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /** 댓글 수정 API **/
 router.patch(
@@ -106,15 +158,29 @@ router.patch(
           .status(404)
           .json({ errorMessage: "존재하지 않는 정보입니다." });
 
-      let til = await prisma.comment.update({
-        where: { id: +commentId, TilId: +tilId, User: +userId },
+      let comment = await prisma.comment.update({
+        where: { id: +commentId, TilId: +tilId, UserId: +userId },
         data: { content: content },
+        include: {
+          User: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
 
       return res.status(200).json({
         status: 201,
         message: "댓글 수정에 성공했습니다.",
-        data: til,
+        data: {
+          id: comment.id,
+          tilId: comment.TilId,
+          userName: comment.User.name,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        },
       });
     } catch (error) {
       next(error);
@@ -126,6 +192,7 @@ router.patch(
 router.delete(
   "/:til_id/comment/:comment_id",
   requireAccessToken,
+  requireDetailRoles,
   async (req, res, next) => {
     try {
       const { userId } = req.user;
@@ -137,11 +204,18 @@ router.delete(
       });
       const isExistComment = await prisma.Comment.findFirst({
         where: { id: +commentId, TilId: +tilId },
+        include: {
+          User: {
+            select: {
+              name: true,
+            },
+          },
+        },
       });
       if (!isExistTIL || !isExistComment)
         return res
           .status(404)
-          .json({ errorMessage: "존재하지 않는 정보입니다." });
+          .json({ status: 404, errorMessage: "존재하지 않는 정보입니다." });
 
       await prisma.comment.delete({
         where: { id: +commentId, TilId: +tilId, UserId: +userId },
@@ -149,7 +223,14 @@ router.delete(
       return res.status(201).json({
         status: 201,
         message: "댓글 삭제에 성공했습니다.",
-        data: isExistComment.id,
+        data: {
+          id: isExistComment.id,
+          tilId: isExistComment.TilId,
+          userName: isExistComment.User.name,
+          content: isExistComment.content,
+          createdAt: isExistComment.createdAt,
+          updatedAt: isExistComment.updatedAt,
+        },
       });
     } catch (error) {
       next(error);
