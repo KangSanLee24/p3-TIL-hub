@@ -68,7 +68,6 @@ router.patch("/", requireAccessToken, async (req, res, next) => {
         dataToUpdate.UserInfo.update.profileImage = profileImage;
     }
 
-    console.log("\n\n\n", dataToUpdate, "\n\n\n");
     if (Object.keys(dataToUpdate).length === 0) {
       return res.status(400).json({
         status: 400,
@@ -92,7 +91,9 @@ router.patch("/", requireAccessToken, async (req, res, next) => {
       data: {
         userId,
         name: updatedUser.name,
+        email: updatedUser.email,
         phoneNumber: updatedUser.phoneNumber,
+        role: updatedUser.role,
         description: updatedUser.UserInfo?.description,
         profileImage: updatedUser.UserInfo?.profileImage,
         trackNumber: updatedUser.UserInfo?.trackNumber,
