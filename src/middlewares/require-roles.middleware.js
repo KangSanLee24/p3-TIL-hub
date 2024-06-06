@@ -70,13 +70,27 @@ export const requireDetailRoles = async (req, res, next) => {
       select: { role: true },
     });
 
+    if (!user) {
+      return res.status(401).json({
+        status: 401,
+        message: "존재하지 않는 사용자 입니다.",
+      });
+    }
+
     const til = await prisma.TIL.findFirst({
       where: { tilId: +tilId },
       select: { UserId: true, visibility: true },
     });
 
+    if (!til) {
+      return res.status(404).json({
+        status: 401,
+        message: "게시글이 존재하지 않습니다.",
+      });
+    }
+
     const follower = await prisma.Follow.findMany({
-      where: { FollowerId: til.userId },
+      where: { FollowerId: til.UserId },
       select: { FollowerId: true },
     });
 
@@ -90,12 +104,12 @@ export const requireDetailRoles = async (req, res, next) => {
 
     //private
     if (til.visibility === "PRIVATE") {
-      if (til.userId != +userId) {
+      if (til.UserId != +userId) {
         return accessDenied();
       }
     } else if (til.visibility === "MANAGER") {
       //manager
-      if (til.userId != +userId && user.role != "MANAGER") {
+      if (til.UserId != +userId && user.role != "MANAGER") {
         return accessDenied();
       }
     } else if (til.visibility === "FOLLOWER") {
