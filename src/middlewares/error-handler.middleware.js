@@ -63,6 +63,9 @@ export default function (err, req, res, next) {
       case '"content" must be a string':
         errorMessage = "내용을 문자열로 입력해 주세요.";
         break;
+      case '"content" is not allowed to be empty':
+        errorMessage = "내용을 입력해 주세요.";
+        break;
       case '"category" must be a string':
         errorMessage = "카테고리를 문자열로 입력해 주세요.";
         break;
