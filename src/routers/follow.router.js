@@ -58,6 +58,7 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
       data: {
         followerName: follower.Follower.name,
         followeeName: follower.Followee.name,
+        createdAt: follower.createdAt,
       },
     });
   } catch (error) {
@@ -91,9 +92,12 @@ router.delete("/:user_id", accessMiddleware, async (req, res, next) => {
       select: { id: true },
     });
 
-    const follower = await prisma.Follow.delete({
-      where: { id: findFollower.id },
-    });
+    if (!findFollower) {
+      return res.status(400).json({
+        status: 400,
+        message: "팔로우 중이 아닙니다.",
+      });
+    }
 
     const responseFollower = await prisma.Follow.create({
       data: {
