@@ -59,6 +59,12 @@ export default function (err, req, res, next) {
       case '"description" length must be less than or equal to 500 characters long':
         errorMessage = "자기소개는 500자까지 입력할 수 있습니다.";
         break;
+      case '"trackNumber" is required':
+        errorMessage = "트랙넘버를 입력해 주세요.";
+        break;
+      case '"trackNumber" must be a string':
+        errorMessage = "트랙넘버를 형식에 맞게 입력해 주세요.";
+        break;
       case '"content" is required':
       case '"content" must be a string':
         errorMessage = "내용을 문자열로 입력해 주세요.";
