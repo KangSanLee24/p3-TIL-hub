@@ -37,10 +37,26 @@ router.post("/", requireAccessToken, async (req, res, next) => {
       },
     });
 
+    // 생성된 게시물의 좋아요 수 조회
+    const likeCount = await prisma.LikeLog.count({
+      where: { TilId: post.tilId },
+    });
+
     return res.status(201).json({
       status: 201,
       message: "게시글 등록에 성공했습니다.",
-      data: post,
+      data: {
+        id: post.id,
+        tilId: post.tilId,
+        userId: post.UserId,
+        title: post.title,
+        content: post.content,
+        category: post.category,
+        visibility: post.visibility,
+        likeNumber: likeCount,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt
+      }
     });
   } catch (error) {
     next(error);
@@ -215,15 +231,32 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
       });
     }
 
-    const post = await prisma.TIL.update({
+    // 게시글 업데이트
+    const updatedPost = await prisma.TIL.update({
       where: { tilId: +tilId, UserId: +userId },
       data: { title, content, category, visibility },
     });
 
+    // 업데이트된 게시글의 좋아요 수 조회
+    const likeCount = await prisma.LikeLog.count({
+      where: { TilId: updatedPost.tilId },
+    });
+
+    // 응답
     return res.status(200).json({
       status: 200,
       message: "게시글 수정에 성공했습니다.",
-      data: post,
+      data: {
+        tilId: updatedPost.tilId,
+        userId: updatedPost.UserId,
+        title: updatedPost.title,
+        content: updatedPost.content,
+        category: updatedPost.category,
+        visibility: updatedPost.visibility,
+        likeNumber: likeCount,
+        createdAt: updatedPost.createdAt,
+        updatedAt: updatedPost.updatedAt,
+      },
     });
   } catch (error) {
     next(error);
@@ -247,16 +280,24 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
       });
     }
 
+    // 삭제된 게시물의 정보를 가져오기 위해 삭제 전에 저장
+    const deletedPost = await prisma.TIL.findUnique({
+      where: { tilId: parseInt(tilId) },
+      select: { tilId: true, title: true }
+    });
+
     await prisma.TIL.delete({
       where: { tilId: parseInt(tilId), UserId: +userId },
     });
+
     return res
-      .status(200)
-      .json({ status: 200, message: "게시글 삭제에 성공했습니다." });
+      .status(201)
+      .json({ status: 201, message: "게시글 삭제에 성공했습니다.", data: deletedPost });
   } catch (error) {
     next(error);
   }
 });
+
 
 // 게시글 상세조회 API /til/:id
 router.get(
