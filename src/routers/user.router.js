@@ -75,8 +75,6 @@ router.patch("/", requireAccessToken, async (req, res, next) => {
       });
     }
 
-    console.log("수정할 데이터:", dataToUpdate); // 수정된 부분
-
     const updatedUser = await prisma.User.update({
       where: { userId: +userId },
       data: dataToUpdate,

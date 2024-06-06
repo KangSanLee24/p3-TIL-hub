@@ -2,7 +2,6 @@ import express from "express";
 import { prisma } from "../utils/prisma/index.js";
 import { requireDetailRoles } from "../middlewares/require-roles.middleware.js";
 import requireAccessToken from "../middlewares/require-access-token.middleware.js";
-// import { likeSchema } from "../middlewares/joi.js";
 
 const router = express.Router();
 
@@ -14,12 +13,6 @@ router.post(
   async (req, res, next) => {
     const { userId } = req.user;
     const tilId = parseInt(req.params.til_id, 10);
-
-    // Joi 검증
-    // const { error } = likeSchema.validate({ til_id: req.params.til_id });
-    // if (error) {
-    //   return res.status(400).json({ errorMessage: error.details[0].message });
-    // }
 
     try {
       const til = await prisma.TIL.findUnique({
@@ -65,12 +58,6 @@ router.delete("/:til_id/like", requireAccessToken, async (req, res, next) => {
   const { userId } = req.user;
   const tilId = parseInt(req.params.til_id, 10);
 
-  // Joi 검증
-  // const { error } = likeSchema.validate({ til_id: req.params.til_id });
-  // if (error) {
-  //   return res.status(400).json({ errorMessage: error.details[0].message });
-  // }
-
   try {
     const like = await prisma.likeLog.findFirst({
       where: { TilId: tilId, UserId: userId },
@@ -93,12 +80,6 @@ router.delete("/:til_id/like", requireAccessToken, async (req, res, next) => {
 // 좋아요 집계
 router.get("/:til_id/aggregate", requireAccessToken, async (req, res, next) => {
   const tilId = parseInt(req.params.til_id, 10);
-
-  // // Joi 검증
-  // const { error } = likeSchema.validate({ til_id: req.params.til_id });
-  // if (error) {
-  //   return res.status(400).json({ errorMessage: error.details[0].message });
-  // }
 
   try {
     const til = await prisma.tIL.findUnique({

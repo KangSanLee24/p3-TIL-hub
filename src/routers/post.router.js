@@ -26,10 +26,6 @@ router.post("/", requireAccessToken, async (req, res, next) => {
 
     // Joi 검증
     await postTIL.validateAsync(req.body);
-    // const { error } = postTIL.validate(req.body);
-    // if (error) {
-    //   return res.status(400).json({ status: 400, message: error.details[0].message });
-    // }
 
     const post = await prisma.TIL.create({
       data: {
@@ -74,13 +70,6 @@ router.get("/", requireListRoles, async (req, res, next) => {
         );
       }
     }
-
-    // const sort = req.query.sort || "desc";
-    // const sortBy = req.query.sortBy || "createdAt";
-
-    // const orderBy =
-    //   sortBy === "likes" ? { LikeLog: { _count: sort } } : { createdAt: sort };
-    // 이렇게 하면 sort: likes로 입력해도 정렬되는데 이건 어때요?
 
     await listComment.validateAsync(req.query);
 
@@ -214,12 +203,6 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
 
     // Joi 검증
     await postTIL.validateAsync(req.body);
-    // const { error } = postTIL.validate(req.body);
-    // if (error) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, message: error.details[0].message });
-    // }
 
     // 접근가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
     const isExistTIL = await prisma.TIL.findFirst({
