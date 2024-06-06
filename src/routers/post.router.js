@@ -283,7 +283,7 @@ router.get(
   async (req, res, next) => {
     const params = req.params;
     const tilId = parseInt(params.til_id);
-    console.log(tilId);
+
     try {
       const post = await prisma.TIL.findUnique({
         where: { tilId: +tilId },
@@ -302,7 +302,14 @@ router.get(
                   name: true,
                 },
               },
+              _count: {
+                select: { CommentLike: true }, //CommentLike 테이블에서 개수 포함
+              },
             },
+            orderBy: {
+              CommentLike: { _count: "desc" }, // 좋아요 개수 순으로 정렬
+            },
+            take: 3,
           },
         },
       });
@@ -331,6 +338,7 @@ router.get(
           comments: post.Comment.map((comment) => ({
             userName: comment.User.name,
             content: comment.content,
+            likeNumber: comment._count.CommentLike, // 좋아요 개수
             createdAt: comment.createdAt,
             updatedAt: comment.updatedAt,
           })),
