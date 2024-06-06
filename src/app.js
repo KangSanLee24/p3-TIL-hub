@@ -7,7 +7,7 @@ import AuthRouter from "./routers/auth.router.js";
 import LikesRouter from "./routers/likes.js";
 import FollowRouter from "./routers/follow.router.js";
 import CommentRouter from "./routers/comment.router.js";
-import errorHandingMiddleware from "./middlewares/error-handler.middleware.js";
+import errorHandlerMiddleware from "./middlewares/error-handler.middleware.js";
 import goodPostRouter from './routers/good-post.router.js';
 import CommentLikeRouter from "./routers/comment-like.router.js";
 
