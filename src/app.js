@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 app.use("/auth", AuthRouter);
 app.use("/user", UserRouter);
-app.use("/til", [PostRouter, CommentRouter, LikesRouter, goodPostRouter]);
+app.use("/til", [goodPostRouter, PostRouter, CommentRouter, LikesRouter]);
 app.use("/comment", [CommentLikeRouter]);
 app.use("/follow", FollowRouter);
 app.use(errorHandlerMiddleware);
