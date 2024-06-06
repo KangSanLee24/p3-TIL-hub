@@ -8,7 +8,7 @@ import { ACCESS_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import { REFRESH_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import refreshMiddleware from "../middlewares/require-refresh-token.middleware.js";
 import { transporter } from '../constants/mail.constant.js';
-import { SEVER_PORT } from "../constants/env.constant.js";
+import { SEVER_PORT , SERVER_IP } from "../constants/env.constant.js";
 
 const router = express.Router();
 
@@ -68,7 +68,7 @@ router.post("/sign-up", async (req, res, next) => {
       }
     );
 
-    const url = `http://localhost:${SEVER_PORT}/auth/verify-email?email=${email}`;
+    const url = `http://${SERVER_IP}:${SEVER_PORT}/auth/verify-email?email=${email}`;
 
     await transporter.sendMail({
       from: 'tilhub@naver.com',
