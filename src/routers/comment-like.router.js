@@ -4,7 +4,7 @@ import requireAccessToken from "../middlewares/require-access-token.middleware.j
 const router = express.Router();
 
 // 코멘트 좋아요 생성 API
-router.post("/:id/like", requireAccessToken, async (req, res) => {
+router.post("/:id/like", requireAccessToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { userId } = req.user;
@@ -68,13 +68,12 @@ router.post("/:id/like", requireAccessToken, async (req, res) => {
       UserId: like.User.name,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "에러남" });
+    next(error);
   }
 });
 
 // 코멘트 좋아요 삭제 API
-router.delete("/:id/like", requireAccessToken, async (req, res) => {
+router.delete("/:id/like", requireAccessToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { userId } = req.user;
@@ -105,8 +104,7 @@ router.delete("/:id/like", requireAccessToken, async (req, res) => {
       message: "댓글좋아요를 삭제했습니다.",
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "에러남" });
+    next(error);
   }
 });
 
