@@ -7,8 +7,8 @@ import jwt from "jsonwebtoken";
 import { ACCESS_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import { REFRESH_TOKEN_SECRET_KEY } from "../constants/env.constant.js";
 import refreshMiddleware from "../middlewares/require-refresh-token.middleware.js";
-import { transporter } from '../constants/mail.constant.js';
-import { SEVER_PORT , SERVER_IP } from "../constants/env.constant.js";
+import { transporter } from "../constants/mail.constant.js";
+import { SERVER_PORT, SERVER_IP } from "../constants/env.constant.js";
 
 const router = express.Router();
 
@@ -51,7 +51,7 @@ router.post("/sign-up", async (req, res, next) => {
             name,
             email,
             password: hashPassword,
-            phoneNumber
+            phoneNumber,
           },
         });
 
@@ -68,12 +68,12 @@ router.post("/sign-up", async (req, res, next) => {
       }
     );
 
-    const url = `http://${SERVER_IP}:${SEVER_PORT}/auth/verify-email?email=${email}`;
+    const url = `http://${SERVER_IP}:${SERVER_PORT}/auth/verify-email?email=${email}`;
 
     await transporter.sendMail({
-      from: 'tilhub@naver.com',
+      from: "tilhub@naver.com",
       to: email,
-      subject: '[tilhub] 회원가입 인증 메일입니다.',
+      subject: "[tilhub] 회원가입 인증 메일입니다.",
       html: `<form action="${url}" method="POST">
       <h2 style="margin: 20px 0">[tilhub] 이메일 인증 버튼을 클릭해 주세요.</h2>
       <p> 인증 유효시간은 3분 입니다. 3분 안에 버튼을 클릭해 주세요! <p>
@@ -83,38 +83,36 @@ router.post("/sign-up", async (req, res, next) => {
 
     return res.status(201).json({
       status: 201,
-      message: "인증 이메일을 전송했습니다. 인증 후 회원가입이 완료됩니다."
+      message: "인증 이메일을 전송했습니다. 인증 후 회원가입이 완료됩니다.",
     });
-    
   } catch (error) {
     next(error);
   }
 });
 
 //이메일 인증
-router.post('/verify-email', async (req, res, next) => {
+router.post("/verify-email", async (req, res, next) => {
   try {
     const { email } = req.query;
 
     await prisma.User.update({
-      where : {email : email},
+      where: { email: email },
       data: {
         isEmailValid: true,
-      }
+      },
     });
 
     return res.status(201).json({
       status: 201,
-      message: "회원가입에 성공했습니다."
+      message: "회원가입에 성공했습니다.",
     });
-    
-  } catch(error){
+  } catch (error) {
     const { email } = req.query;
     //트랙잭션
     await prisma.$transaction(
       async (tx) => {
         const user = await tx.User.findFirst({
-          where: {email: email}
+          where: { email: email },
         });
 
         await tx.UserInfo.delete({
@@ -124,7 +122,7 @@ router.post('/verify-email', async (req, res, next) => {
         });
 
         await tx.User.delete({
-          where: {email: email}
+          where: { email: email },
         });
       },
       {
@@ -154,12 +152,12 @@ router.post("/sign-in", async (req, res, next) => {
       });
     }
 
-    if (user.isEmailValid === false){
+    if (user.isEmailValid === false) {
       return res.status(400).json({
         status: 400,
         message: "이메일 인증을 완료해 주세요.",
       });
-    };
+    }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
@@ -192,7 +190,7 @@ router.post("/sign-in", async (req, res, next) => {
         UserId: user.userId,
       },
     });
-    
+
     if (existingToken) {
       await prisma.RefreshToken.update({
         where: {
