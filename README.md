@@ -74,7 +74,7 @@ yarn
 `.env` 파일을 생성하고 다음 내용을 추가합니다:
 
 ```env
-SEVER_PORT=3015
+SERVER_PORT=3015
 DATABASE_URL="your-database-url"
 ACCESS_TOKEN_SECRET_KEY='your_secret_key'
 REFRESH_TOKEN_SECRET_KEY='your_secret_key2'
@@ -109,6 +109,7 @@ yarn start
 ## 🌐 배포
 
 - **CentOS 9에 Express / PM2**를 이용하여 웹 서비스를 베포합니다.
+- **http://til-hub.duckdns.org:3001**
 
 ## 🛠 개발 환경
 

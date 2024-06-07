@@ -97,32 +97,35 @@ router.delete("/:user_id", accessMiddleware, async (req, res, next) => {
         status: 400,
         message: "팔로우 중이 아닙니다.",
       });
-    }
+    };
 
-    const responseFollower = await prisma.Follow.create({
-      data: {
-        FollowerId: userId,
-        FolloweeId: +followeeId,
-      },
-      include: {
-        Follower: {
-          select: {
-            name: true,
-          },
-        },
-        Followee: {
-          select: {
-            name: true,
-          },
-        },
-      },
+    await prisma.Follow.delete({
+      where: { id: findFollower.id}
     });
+
+    // const responseFollower = await prisma.Follow.findFirst({
+    //   where: {
+    //     FollowerId: userId,
+    //     FolloweeId: +followeeId,
+    //   },
+    //   include: {
+    //     Follower: {
+    //       select: {
+    //         name: true,
+    //       },
+    //     },
+    //     Followee: {
+    //       select: {
+    //         name: true,
+    //       },
+    //     },
+    //   },
+    // });
 
     return res.status(200).json({
       status: 200,
       message: "구독 취소에 성공했습니다.",
-      followerName: responseFollower.Follower.name,
-      followeeName: responseFollower.Followee.name,
+      data: findFollower,
     });
   } catch (error) {
     next(error);
