@@ -36,10 +36,11 @@ export default async function (req, res, next) {
       });
     }
 
-    req.user = user;
+    req.user = user; // req.user에 User테이블의 컬럼들 다 들어간다.
 
     next();
   } catch (error) {
+    // 여기도 error-handler.middleware.js로 보내도된다.
     let errorMessage;
 
     switch (error.name) {
