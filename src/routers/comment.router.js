@@ -9,8 +9,8 @@ const router = express.Router();
 /** 댓글 작성 API  **/
 router.post(
   "/:til_id/comment",
-  requireAccessToken,
-  requireDetailRoles,
+  requireAccessToken, // accesstoken이 있는 지 확인
+  requireDetailRoles, // 특정 TIL에 접근 권한이 있는 지 확인
   async (req, res, next) => {
     try {
       const { userId } = req.user;
