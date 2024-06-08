@@ -33,6 +33,7 @@ router.post("/:user_id", accessMiddleware, async (req, res, next) => {
       });
     }
 
+    //구독 테이블 디비 생성
     const follower = await prisma.Follow.create({
       data: {
         FollowerId: userId,
