@@ -17,7 +17,7 @@ router.post("/sign-up", async (req, res, next) => {
   try {
     const { name, email, password, passwordConfirm, phoneNumber } = req.body;
 
-    //joi 유효성 검사
+    //joi 유효성 검사(middlewares/joi.js파일)
     await createUser.validateAsync(req.body);
 
     const isExistUser = await prisma.User.findFirst({
@@ -43,7 +43,7 @@ router.post("/sign-up", async (req, res, next) => {
     //비밀번호 해싱
     const hashPassword = await bcrypt.hash(password, 10);
 
-    //트랙잭션
+    //트랙잭션( 유저 테이블과 유저인포 테이블에 같이 데이터를 넣고 데이터 일관성을 지키기 위해 트랜잭션 수행)
     const [createdUser, createdUserInfo] = await prisma.$transaction(
       async (tx) => {
         const user = await tx.User.create({
@@ -68,8 +68,11 @@ router.post("/sign-up", async (req, res, next) => {
       }
     );
 
+    //url 선언
     const url = `http://${SERVER_IP}:${SERVER_PORT}/auth/verify-email?email=${email}`;
 
+    //nodemailer 패키지 사용해서 메일 전공. action에 선언한 url을 넣어줘서 클릭시 url이 작동되도록(인섬니아에서 url호출하는것과 비슷한 원리)
+    // mail.comstant.js 환경변수 만들어줘야함
     await transporter.sendMail({
       from: "tilhub@naver.com",
       to: email,
@@ -90,7 +93,7 @@ router.post("/sign-up", async (req, res, next) => {
   }
 });
 
-//이메일 인증
+//이메일 인증  위에서 action에서 호출된 url에서 작동하는 라우터
 router.post("/verify-email", async (req, res, next) => {
   try {
     const { email } = req.query;
@@ -108,7 +111,9 @@ router.post("/verify-email", async (req, res, next) => {
     });
   } catch (error) {
     const { email } = req.query;
-    //트랙잭션
+
+    //트랙잭션 마찬가지로 데이터 일관성을 위해 트랜잭션으로 삭제.
+    //fk가 존재할 시 pk 삭제 불가. (ex. 유저 인포테이블에 데이터가 있는데 유저 테이블에 데이터 삭제 불가)
     await prisma.$transaction(
       async (tx) => {
         const user = await tx.User.findFirst({
@@ -152,6 +157,7 @@ router.post("/sign-in", async (req, res, next) => {
       });
     }
 
+    // 이메일 인증을 하지 않고 로그인을 시도하면 에러 메세지 출력
     if (user.isEmailValid === false) {
       return res.status(400).json({
         status: 400,
@@ -168,6 +174,7 @@ router.post("/sign-in", async (req, res, next) => {
     }
 
     //토큰 생성
+    //로그인 시 엑세스토큰, 리프레시 토큰 발급. 리프레시 토큰은 로그아웃시 사용됨. 엑세스 토큰은 유효시간 지나면 저절로 만료
     const accesstoken = jwt.sign(
       { userId: user.userId },
       ACCESS_TOKEN_SECRET_KEY,
@@ -180,6 +187,7 @@ router.post("/sign-in", async (req, res, next) => {
       { expiresIn: "7d" }
     );
 
+    //헤더에 토큰 저장
     res.setHeader("accesstoken", `Bearer ${accesstoken}`);
     res.setHeader("refreshtoken", `Bearer ${refreshtoken}`);
 
@@ -191,6 +199,7 @@ router.post("/sign-in", async (req, res, next) => {
       },
     });
 
+    //만약 리프레시 토큰이 존재하면 로그인시 리프레시 토큰을 생성하는게 아니라 재발급함.
     if (existingToken) {
       await prisma.RefreshToken.update({
         where: {
@@ -209,6 +218,7 @@ router.post("/sign-in", async (req, res, next) => {
       });
     }
 
+    //리프레시 토큰 생성
     await prisma.RefreshToken.create({
       data: {
         UserId: user.userId,
@@ -232,6 +242,7 @@ router.post("/sign-out", refreshMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
+    //저장된 리프레시 토큰 삭제
     await prisma.RefreshToken.delete({
       where: { UserId: +userId },
     });
@@ -249,6 +260,7 @@ router.post("/sign-out", refreshMiddleware, async (req, res, next) => {
 });
 
 //token 재발급 /auth/token
+//엑세스 토큰을 재발급 하기 위해 리프레시 토큰을 이용해서 재발금.
 router.post("/token", refreshMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
