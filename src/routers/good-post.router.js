@@ -7,9 +7,11 @@ const router = express.Router();
 
 router.get('/aggregate', requireAccessToken, async (req, res, next) => {
     try{
+        //접속일로부터 7일전 날짜 저장
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+        //프리즈마 로우쿼리 사용해서 접속일로부터 7일전까지의 모든 til에서 가장 좋아요가 많은 퍼블릭 게시글 뽑는 쿼리 수행
         const getPost = await prisma.$queryRaw`
         select
             a.til_id ,
@@ -46,6 +48,8 @@ router.get('/aggregate', requireAccessToken, async (req, res, next) => {
             a.user_Id = c.user_id;
       `;
 
+        //좋아요가 같은 게시글 2개가 나올 수 있으므로 배열 -> map
+        //좋아요: Number로 다시 숫자 선언해준 이유 : bigint타입으로 출력되어서 화면에 출력이 안되는 오류가 있었음. 그래서 넘버로 다시 선언해줌
         const printPost = getPost.map((post) => ({
             '작성자': post.name,
             '제목': post.title,
