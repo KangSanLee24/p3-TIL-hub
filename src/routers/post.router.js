@@ -27,6 +27,7 @@ router.post("/", requireAccessToken, async (req, res, next) => {
     // Joi 검증
     await postTIL.validateAsync(req.body);
 
+    // 게시물 생성
     const post = await prisma.TIL.create({
       data: {
         title,
@@ -42,6 +43,7 @@ router.post("/", requireAccessToken, async (req, res, next) => {
       where: { TilId: post.tilId },
     });
 
+    // 성공 응답
     return res.status(201).json({
       status: 201,
       message: "게시글 등록에 성공했습니다.",
@@ -66,13 +68,13 @@ router.post("/", requireAccessToken, async (req, res, next) => {
 // 게시글 목록 조회 API /til
 router.get("/", requireListRoles, async (req, res, next) => {
   try {
-    // 기본적으로 visibility가 PUBLIC인건 포함.
+    // 기본적으로 visibility가 PUBLIC인 건 포함.
     let whereCondition = {
       OR: [{ visibility: VISIBILITY.PUBLIC }],
     };
 
     // 유저 정보가 있다면 MEMBER인지 MANAGER인지에 따라
-    //어떤 TIL visibility까지 접근가능한지
+    // 어떤 TIL visibility까지 접근 가능한지
     if (req.user) {
       const { role } = req.user;
       const userId = req.user.userId;
@@ -87,22 +89,24 @@ router.get("/", requireListRoles, async (req, res, next) => {
       }
     }
 
+    // Joi 검증
     await listComment.validateAsync(req.query);
 
     const sort = req.query.sort || "desc";
     let orderBy;
 
     if (sort === "asc" || sort === "desc") {
-      // asc나 desc로 입력했을때,
+      // asc나 desc로 입력했을 때
       orderBy = { createdAt: sort };
     } else if (sort === "likes") {
-      // sort:likes로 입력했을때는 좋아요 많은 순서
+      // sort:likes로 입력했을 때는 좋아요 많은 순서
       orderBy = { LikeLog: { _count: "desc" } };
     } else {
-      // 기본적으로(입력안하면) 내림차순(최신순)
+      // 기본적으로(입력 안 하면) 내림차순(최신순)
       orderBy = { createdAt: "desc" };
     }
 
+    // 게시물 목록 조회
     const posts = await prisma.TIL.findMany({
       where: whereCondition,
       orderBy: orderBy,
@@ -117,6 +121,7 @@ router.get("/", requireListRoles, async (req, res, next) => {
       },
     });
 
+    // 응답 데이터 구성
     const response = posts.map((post) => ({
       tilId: post.tilId,
       userId: post.userId,
@@ -145,7 +150,7 @@ router.get("/follower", requireAccessToken, async (req, res, next) => {
   try {
     const { userId } = req.user;
 
-    //내가 팔로우 중인 사람 리스트 불러오기
+    // 내가 팔로우 중인 사람 리스트 불러오기
     const followees = await prisma.Follow.findMany({
       where: { FollowerId: +userId },
       select: { FolloweeId: true },
@@ -154,7 +159,7 @@ router.get("/follower", requireAccessToken, async (req, res, next) => {
     const followeeIds = followees.map((f) => f.FolloweeId);
 
     let tils = [];
-    // followeeIds를 돌면서 TIL테이블을 돌아서 TILs를 가져온다.
+    // followeeIds를 돌면서 TIL 테이블을 돌아서 TILs를 가져온다.
     for (const followeeId of followeeIds) {
       const til = await prisma.TIL.findMany({
         where: { visibility: "FOLLOWER", UserId: +followeeId },
@@ -172,13 +177,15 @@ router.get("/follower", requireAccessToken, async (req, res, next) => {
       tils = tils.concat(til);
     }
 
-    if (!tils) {
+    // 게시물이 없는 경우
+    if (!tils.length) {
       return res.status(400).json({
         status: 400,
         message: "게시글이 존재하지 않습니다.",
       });
     }
 
+    // 응답 데이터 구성
     const response = tils.map((til) => ({
       tilId: til.tilId,
       userId: til.userId,
@@ -220,11 +227,12 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
     // Joi 검증
     await postTIL.validateAsync(req.body);
 
-    // 접근가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
+    // 접근 가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
     const isExistTIL = await prisma.TIL.findFirst({
       where: { tilId: +tilId, UserId: +userId },
     });
 
+    // 게시물이 존재하지 않거나 접근 권한이 없는 경우
     if (!isExistTIL) {
       return res.status(404).json({
         errorMessage: "게시글이 존재하지 않거나 접근 권한이 없습니다.",
@@ -242,7 +250,7 @@ router.put("/:til_id", requireAccessToken, async (req, res, next) => {
       where: { TilId: updatedPost.tilId },
     });
 
-    // 응답
+    // 성공 응답
     return res.status(200).json({
       status: 200,
       message: "게시글 수정에 성공했습니다.",
@@ -269,11 +277,12 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
     const tilId = req.params.til_id;
     const { userId } = req.user;
 
-    // 접근가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
+    // 접근 가능한 userId, 입력받은 tilId랑 일치하는 TIL이 있는지 체크
     const isExistTIL = await prisma.TIL.findFirst({
       where: { tilId: parseInt(tilId), UserId: +userId },
     });
 
+    // 게시물이 존재하지 않거나 접근 권한이 없는 경우
     if (!isExistTIL) {
       return res.status(404).json({
         errorMessage: "게시글이 존재하지 않거나 접근 권한이 없습니다.",
@@ -286,10 +295,12 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
       select: { tilId: true, title: true }
     });
 
+    // 게시물 삭제
     await prisma.TIL.delete({
       where: { tilId: parseInt(tilId), UserId: +userId },
     });
 
+    // 성공 응답
     return res
       .status(201)
       .json({ status: 201, message: "게시글 삭제에 성공했습니다.", data: deletedPost });
@@ -297,7 +308,6 @@ router.delete("/:til_id", requireAccessToken, async (req, res, next) => {
     next(error);
   }
 });
-
 
 // 게시글 상세조회 API /til/:id
 router.get(
@@ -327,7 +337,7 @@ router.get(
                 },
               },
               _count: {
-                select: { CommentLike: true }, //CommentLike 테이블에서 개수 포함
+                select: { CommentLike: true }, // CommentLike 테이블에서 개수 포함
               },
             },
             orderBy: {
@@ -338,6 +348,7 @@ router.get(
         },
       });
 
+      // 게시물이 존재하지 않는 경우
       if (!post) {
         return res.status(400).json({
           status: 400,
@@ -345,6 +356,7 @@ router.get(
         });
       }
 
+      // 성공 응답
       res.status(200).json({
         status: 200,
         message: "게시글 상세 조회에 성공했습니다.",
